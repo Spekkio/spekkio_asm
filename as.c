@@ -19,7 +19,6 @@
 
 int main(int argc, char **argv)
 {
-  unsigned int i;
   FILE * f;
   cpu_instr_set set;
   f=0;
@@ -34,12 +33,13 @@ int main(int argc, char **argv)
 
   loadCPUFile("instr_sets/DCPU-16.set",&set);
 
-  
+  /*  
   for(i=0;i<set.num;i++)
     {
       printf("%s %s -> %s = ",set.instr[i].instr_name,set.instr[i].args,set.instr[i].op_desc);
       printf("0x%04X\n",encode_opcode(set.instr[i].args, set.instr[i].op_desc, set.instr[i].n_args, 0x5, 0x21));
     }
+  */
   
 
   if(argc==2)
