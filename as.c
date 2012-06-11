@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
   if(f)
     {
-      parseFile(f);
+      parseFile(f,&set);
       fclose(f);
     } else printf("Specify a file.\n");
 

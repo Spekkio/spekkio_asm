@@ -29,8 +29,9 @@ typedef struct
   unsigned int num;
 }cpu_instr_set;
 
-void parseLine(const char * line);
-void parseFile(FILE * f);
+
+void parseLine(const char * line, cpu_instr_set * set);
+void parseFile(FILE * f, cpu_instr_set * set);
 void loadCPUFile(const char * filename, cpu_instr_set * set);
 int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr * instr, cpu_instr_set * set);

@@ -102,8 +102,35 @@ void addInstruction(const cpu_instr * instr, cpu_instr_set * set)
   set->num++;
 }
 
-void parseLine(const char * line)
+void parseLine(const char * line, cpu_instr_set * set)
 {
+  unsigned int i,c,a;
+  char temp[100];
+
+  temp[0]=temp[0];
+
+  for(i=0;i<strlen(line);i++)
+    {
+
+      if(line[i]==':')
+	{
+	  a=0;
+	  for(i=i+1,a=0;((i<strlen(line)) && (line[i]!=' '));i++,a++)
+	    {
+	      temp[a]=line[i];
+	    }
+	  temp[a]='\0';
+	  printf("found tag: %s\n",temp);
+	}
+
+      for(c=0;c<set->num;c++)
+	{
+	  if(!strncmp(&line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
+	    {
+	      printf("found instr: %s - ",set->instr[c].instr_name);
+	    }
+	}
+    }
   printf("%s",line);
 }
 
@@ -159,7 +186,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
   return 1;
 }
 
-void parseFile(FILE * f)
+void parseFile(FILE * f, cpu_instr_set * set)
 {
   char c;
   char lineBuffer[1000];
@@ -209,7 +236,7 @@ void parseFile(FILE * f)
 	      lineBuffer[line_counter]='\0';
 	      if(line_counter>1)
 		{
-		  parseLine(lineBuffer);
+		  parseLine(lineBuffer,set);
 		}
 	      line_counter=0;
 	    }
