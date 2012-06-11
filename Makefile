@@ -18,4 +18,3 @@ encode.o: encode.c encode.h
 clean:
 	rm -rf instr_sets/*~ *~ *.o $(all_objects)
 
-#find . -name "*~" -delete
