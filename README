@@ -1,0 +1,10 @@
+A modifiable assembler, you can add instructions sets under instr_sets/
+
+I started doing this because I wanted an assembler that could support
+any Microchip MCU. Using the syntax in the description
+of the instruction set from the Microchip MCU Datasheets.
+
+Currently I have added the DCPU-16 instruction set from the game 0x10c.
+
+Currently, the assembler cannot do anything. It cannot parse asm files.
+This is a work in progress.

@@ -1,0 +1,77 @@
+; It's not possible to design a OPcodes with mixed-in 
+; arguments, like this bbbbaabbaaaa0101, they need to
+; be in a line -> bbbbbbaaaaaa0101.
+
+; x = dont care
+; a-z,A-Z (except x) = argument
+; a-z!=A-Z
+
+-OPTIONS
+WORD_LEN=STATIC     ; Words are x bit static, OP Codes they cannot vary in size, RISC type machine.
+WORD_SIZE=16        ; 16bit OPcodes
+WORDS_RAM=0x10000   ; Number of Words in RAM 
+
+;BITS_RAM=0x100000 
+;BYTES_RAM=0x20000  ; 128kByte RAM
+
+;Intruction name:ARG1,ARG2,..:OPCODE(bits)
+-INSTRUCTIONS
+NOP:   :xxxxxxxxxxx00000:   ; 
+JSR:a  :aaaaaa0000010000:   ; - pushes the address of the next instruction to the stack, then sets PC to 'a'
+SET:a,b:bbbbbbaaaaaa0001:   ; - sets a to b
+ADD:a,b:bbbbbbaaaaaa0010:   ; - sets a to a+b, sets O to 0x0001 if there's an overflow, 0x0 otherwise
+SUB:a,b:bbbbbbaaaaaa0011:   ; - sets a to a-b, sets O to 0xffff if there's an underflow, 0x0 otherwise
+MUL:a,b:bbbbbbaaaaaa0100:   ; - sets a to a*b, sets O to ((a*b)>>16)&0xffff
+DIV:a,b:bbbbbbaaaaaa0101:   ; - sets a to a/b, sets O to ((a<<16)/b)&0xffff. if b==0, sets a and O to 0 instead.
+MOD:a,b:bbbbbbaaaaaa0110:   ; - sets a to a%b. if b==0, sets a to 0 instead.
+SHL:a,b:bbbbbbaaaaaa0111:   ; - sets a to a<<b, sets O to ((a<<b)>>16)&0xffff
+SHR:a,b:bbbbbbaaaaaa1000:   ; - sets a to a>>b, sets O to ((a<<16)>>b)&0xffff
+AND:a,b:bbbbbbaaaaaa1001:   ; - sets a to a&b
+BOR:a,b:bbbbbbaaaaaa1010:   ; - sets a to a|b
+XOR:a,b:bbbbbbaaaaaa1011:   ; - sets a to a^b
+IFE:a,b:bbbbbbaaaaaa1100:   ; - performs next instruction only if a==b
+IFN:a,b:bbbbbbaaaaaa1101:   ; - performs next instruction only if a!=b
+IFG:a,b:bbbbbbaaaaaa1110:   ; - performs next instruction only if a>b
+IFB:a,b:bbbbbbaaaaaa1111:   ; - performs next instruction only if (a&b)!=0
+
+;INT:n :nnnnnn0000100000:   ; - Sends an interrupt with number 'n'
+;CLI:  :xxxxxx0000110000:   ; - Clears the interrupt flag
+;STI:  :xxxxxx0001000000:   ; - Sets the interrupt flag
+;LCR:a :aaaaaa0001010000:   ; - Loads the CR into 'a'
+;SCR:a :aaaaaa0001100000:   ; - Stores the value of 'a' into CR
+
+;Argument name:SUBARG1,SUBARG2,...:BIT Pattern
+-ARGUMENTS
+A          : :000000:
+B          : :000001:
+C          : :000010:
+X          : :000011:
+Y          : :000100:
+Z          : :000101:
+I          : :000110:
+J          : :000111:
+R          :a:001aaa:
+[n+a]      :a:010aaa: ; [next word + register]
+POP/[SP++] : :011000:
+PEEK/[SP]  : :011001:
+PUSH/[--SP]: :011010:
+SP         : :011011:
+PC         : :011100:
+O          : :011101:
+[n]        : :011110: ; [next word]
+n          : :011111: ; next word
+v          :v:1vvvvv:
+
+;Values: (6 bits)
+;    0x00-0x07: register (A, B, C, X, Y, Z, I or J, in that order)
+;    0x08-0x0f: [register]
+;    0x10-0x17: [next word + register]
+;         0x18: POP / [SP++]
+;         0x19: PEEK / [SP]
+;         0x1a: PUSH / [--SP]
+;         0x1b: SP
+;         0x1c: PC
+;         0x1d: O
+;         0x1e: [next word]
+;         0x1f: next word (literal)
+;    0x20-0x3f: literal value 0x00-0x1f (literal)
