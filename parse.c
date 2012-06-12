@@ -83,6 +83,10 @@ void loadCPUFile(const char * filename, cpu_instr_set * set)
 			      addInstruction(&instr, set);
 			    }
 			  break;
+
+			case ARGU:
+			  parseARGLine(lineBuffer,&instr);
+			  break;
 			default: break;
 			}
 
@@ -142,6 +146,19 @@ void parseLine(const char * line, cpu_instr_set * set)
     }
   printf("%s",line);
 }
+
+
+int parseARGLine(const char * line, cpu_instr * ret)
+{
+  ret=ret;
+
+  if(line[0]=='-')
+    return 0;
+
+  printf("%s",line);
+  return 0;
+}
+
 
 int parseCPULine(const char * line, cpu_instr * ret)
 {

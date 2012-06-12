@@ -1,0 +1,102 @@
+; It's not possible to design a OPcodes with mixed-in 
+; arguments, like this bbbbaabbaaaa0101, they need to
+; be in a line -> bbbbbbaaaaaa0101.
+
+; x = dont care
+; a-z,A-Z (except x) = argument
+; a-z!=A-Z
+
+-OPTIONS
+WORD_LEN=STATIC     ; Words are x bit static, OP Codes they cannot vary in size, RISC type machine.
+WORD_SIZE=16        ; 16bit OPcodes
+WORDS_RAM=0x10000   ; Number of Words in RAM 
+
+;BITS_RAM=0x100000 
+;BYTES_RAM=0x20000  ; 128kByte RAM
+
+;Intruction name:ARG1,ARG2,..:OPCODE(bits)
+-INSTRUCTIONS
+SET:b,a:aaaaaabbbbb00001:  ;sets b to a
+ADD:b,a:aaaaaabbbbb00010:  ;sets b to b+a, sets EX to 0x0001 if there's an overflow, 0x0 otherwise
+SUB:b,a:aaaaaabbbbb00011:  ;sets b to b-a, sets EX to 0xffff if there's an underflow, 0x0 otherwise
+MUL:b,a:aaaaaabbbbb00100:  ;sets b to b*a, sets EX to ((b*a)>>16)&0xffff (treats b, a as unsigned)
+MLI:b,a:aaaaaabbbbb00101:  ;like MUL, but treat b, a as signed
+DIV:b,a:aaaaaabbbbb00110:  ;sets b to b/a, sets EX to ((b<<16)/a)&0xffff. if a==0, sets b and EX to 0 instead. (treats b, a as unsigned)
+DVI:b,a:aaaaaabbbbb00111:  ;like DIV, but treat b, a as signed. Rounds towards 0
+MOD:b,a:aaaaaabbbbb01000:  ;sets b to b%a. if a==0, sets b to 0 instead.
+MDI:b,a:aaaaaabbbbb01001:  ;like MOD, but treat b, a as signed. (MDI -7, 16 == -7)
+AND:b,a:aaaaaabbbbb01010:  ;sets b to b&a
+BOR:b,a:aaaaaabbbbb01011:  ;sets b to b|a
+XOR:b,a:aaaaaabbbbb01100:  ;sets b to b^a
+SHR:b,a:aaaaaabbbbb01101:  ;sets b to b>>>a, sets EX to ((b<<16)>>a)&0xffff (logical shift)
+ASR:b,a:aaaaaabbbbb01110:  ;sets b to b>>a, sets EX to ((b<<16)>>>a)&0xffff (arithmetic shift) (treats b as signed)
+SHL:b,a:aaaaaabbbbb01111:  ;sets b to b<<a, sets EX to ((b<<a)>>16)&0xffff
+IFB:b,a:aaaaaabbbbb10000: ;performs next instruction only if (b&a)!=0
+IFC:b,a:aaaaaabbbbb10001: ;performs next instruction only if (b&a)==0
+IFE:b,a:aaaaaabbbbb10010: ;performs next instruction only if b==a 
+IFN:b,a:aaaaaabbbbb10011: ;performs next instruction only if b!=a 
+IFG:b,a:aaaaaabbbbb10101: ;performs next instruction only if b>a 
+IFA:b,a:aaaaaabbbbb10110: ;performs next instruction only if b>a (signed)
+IFL:b,a:aaaaaabbbbb10111: ;performs next instruction only if b<a 
+IFU:b,a:aaaaaabbbbb11000: ;performs next instruction only if b<a (signed)
+;0x18
+;0x19
+ADX:b,a: ;sets b to b+a+EX, sets EX to 0x0001 if there is an over-flow, 0x0 otherwise
+SBX:b,a: ;sets b to b-a+EX, sets EX to 0xFFFF if there is an under-flow, 0x0 otherwise
+;0x1c
+;0x1d
+STI:b,a: ;sets b to a, then increases I and J by 1
+STD:b,a: ;sets b to a, then decreases I and J by 1
+
+
+;An argument can contain the values 0-9 and x.
+
+;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Used for what instr:
+-ARGUMENTS
+A          :   :000000::All:
+B          :   :000001::All:
+C          :   :000010::All:
+X          :   :000011::All:
+Y          :   :000100::All:
+Z          :   :000101::All:
+I          :   :000110::All:
+J          :   :000111::All:
+Ra         :a  :001aaa::All:
+[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn:All: ; [next word + register]
+POP        :   :011000::All: ; [SP++]
+PEEK       :   :011001::All: ; [SP]
+PUSH       :   :011010::All: ; [--SP]
+SP         :   :011011::All:
+PC         :   :011100::All:
+O          :   :011101::All:
+[n]        :   :011110:nnnnnnnnnnnnnnnn:All: ; [next word]
+n          :n  :011111:nnnnnnnnnnnnnnnn:All: ; next word
+v          :v  :1vvvvv::All:                 ; Literal value
+
+
+; a found variable, can be represented with regexp
+; [\\ ]*[0-9x]\\{1,1000\\}[\\ ]*
+
+; any other character, here plus is the character.
+; +\\{1\\}
+
+; If a number is defined, it's either any of the two
+; arguments in the bottom. probably it's v if the value is >0x20
+; use the const_mask value to know.
+
+; Some of these, like the register names are just symbols
+; with values. So they can get put into the symbols struct.
+
+;Values: (6 bits)
+;    0x00-0x07: register (A, B, C, X, Y, Z, I or J, in that order)
+;    0x08-0x0f: [register]
+;    0x10-0x17: [next word + register]
+;         0x18: POP / [SP++]
+;         0x19: PEEK / [SP]
+;         0x1a: PUSH / [--SP]
+;         0x1b: SP
+;         0x1c: PC
+;         0x1d: O
+;         0x1e: [next word]
+;         0x1f: next word (literal)
+;    0x20-0x3f: literal value 0x00-0x1f (literal)

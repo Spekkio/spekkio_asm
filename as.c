@@ -26,12 +26,16 @@ int main(int argc, char **argv)
   symbol_table sym_table;
   regex_t start;
   regmatch_t rmt;
+  unmask u;
+
   /*
   const char patt[] = "^\\[{1,1}[0123456789x]{1,6}[+]{1,1}[ABCXYZIJ]{1,1}\\]{1,1}$";
   */
   const char patt[] = "^[\\ ]*\\[\\{1\\}[\\ ]*[0-9x]\\{1,1000\\}[\\ ]*+\\{1\\}[\\ ]*[0-9A-Za-z]\\{1,1000\\}[\\ ]*\\]\\{1\\}[\\ ]*$";
   const char match[] = "[0x90+0x009]";
 
+  get_const_mask_bits("0101asdkjas010", &u);
+  match_maskstring_to_args("a,b", "aaaaaabbbbbb1010");
   /*
 
    */
