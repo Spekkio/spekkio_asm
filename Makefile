@@ -2,7 +2,7 @@ objects = parse.o encode.o
 all_objects = as $(objects)
 flags=-g -Wall -Wextra -Werror -pedantic
 std=-ansi
-optimize=-O3
+optimize=
 
 target: $(all_objects)
 

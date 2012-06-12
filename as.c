@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <inttypes.h>
+#include <regex.h>
 #include "encode.h"
 #include "parse.h"
 
@@ -21,6 +22,41 @@ int main(int argc, char **argv)
 {
   FILE * f;
   cpu_instr_set set;
+  symbol * symbols;
+  symbol_table sym_table;
+  regex_t start;
+  regmatch_t rmt;
+  /*
+  const char patt[] = "^\\[{1,1}[0123456789x]{1,6}[+]{1,1}[ABCXYZIJ]{1,1}\\]{1,1}$";
+  */
+  const char patt[] = "^[\\ ]*\\[\\{1\\}[\\ ]*[0-9x]\\{1,1000\\}[\\ ]*+\\{1\\}[\\ ]*[0-9A-Za-z]\\{1,1000\\}[\\ ]*\\]\\{1\\}[\\ ]*$";
+  const char match[] = "[0x90+0x009]";
+
+  /*
+
+   */
+
+  symbols = malloc(sizeof(symbol)*MAX_SYMBOLS);
+  sym_table.table = symbols;
+  sym_table.table = sym_table.table;
+
+  /*printf("%lu kB\n",sizeof(cpu_instr_set)/1024);*/
+
+  if(!regcomp(&start, patt, 0))
+    {
+      if(regexec(&start, match, 0, &rmt, 0))
+	{
+	  printf("No match\n");
+	}
+      else
+	{
+	  printf("Match\n");
+	}
+
+    } else printf("Some regexp error\n");  
+
+  regfree(&start);
+
   f=0;
 
   /*
@@ -40,7 +76,6 @@ int main(int argc, char **argv)
       printf("0x%04X\n",encode_opcode(set.instr[i].args, set.instr[i].op_desc, set.instr[i].n_args, 0x5, 0x21));
     }
   */
-  
 
   if(argc==2)
     {
@@ -48,11 +83,13 @@ int main(int argc, char **argv)
       f=fopen(argv[1],"r");
     }
 
-  if(f)
+  if((f!=0) && (symbols!=0))
     {
       parseFile(f,&set);
       fclose(f);
+      free(symbols);
     } else printf("Specify a file.\n");
 
+  
   return 0;
 }

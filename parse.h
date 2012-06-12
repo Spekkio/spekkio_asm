@@ -27,6 +27,25 @@ typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
 #ifndef MAX_SYM_NAME_LEN /*max length of one symbol name, variable, pointer*/
 #define MAX_SYM_NAME_LEN 100
 #endif
+#ifndef MAX_SYMBOLS
+#define MAX_SYMBOLS 0xFFFF
+#endif
+
+
+typedef struct
+{
+  char parsed_arg[MAX_ARG_PARSED_LEN];
+  int arg_index;
+  int arg_shift;     /*the number of bits to shift the value up to find the right place*/
+  uint64_t arg_mask; /*the bitmask where 1's where the argument is.*/
+}arg_parse;
+
+typedef struct
+{
+  uint64_t const_;     /*The contant values of the opcode, surrounding the arguments*/
+  uint64_t const_mask; /*The bitmask of the contant value*/
+  arg_parse arg[MAX_ARGS];
+}asm_parse;
 
 typedef struct
 {
@@ -36,6 +55,7 @@ typedef struct
   char args[MAX_ARG_LEN];
   int op_len;
   char op_desc[MAX_OP_DESC];
+  asm_parse op;
 }cpu_instr;
 
 typedef struct
@@ -46,22 +66,17 @@ typedef struct
 
 typedef struct
 {
-  char parsed_arg[MAX_ARG_PARSED_LEN];
-  int arg_index;
-}arg_parse;
-
-typedef struct
-{
-  int instr_index;
-  arg_parse arg[MAX_ARGS];
-}asm_parse;
-
-typedef struct
-{
   char string[MAX_SYM_NAME_LEN];
   uint64_t value;
   is_def is;
 }symbol;
+
+typedef struct
+{
+  int n_symbols;
+  symbol * table;
+}symbol_table;
+
 
 void parseLine(const char * line, cpu_instr_set * set);
 void parseFile(FILE * f, cpu_instr_set * set);
