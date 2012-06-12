@@ -39,28 +39,33 @@ IFB:a,b:bbbbbbaaaaaa1111:   ; - performs next instruction only if (a&b)!=0
 ;STI:  :xxxxxx0001000000:   ; - Sets the interrupt flag
 ;LCR:a :aaaaaa0001010000:   ; - Loads the CR into 'a'
 ;SCR:a :aaaaaa0001100000:   ; - Stores the value of 'a' into CR
+;An argument can contain the values 0-9 and x.
 
-;Argument name:SUBARG1,SUBARG2,...:BIT Pattern
+;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Used for what instr:
 -ARGUMENTS
-A          : :000000:
-B          : :000001:
-C          : :000010:
-X          : :000011:
-Y          : :000100:
-Z          : :000101:
-I          : :000110:
-J          : :000111:
-R          :a:001aaa:
-[n+a]      :a:010aaa: ; [next word + register]
-POP/[SP++] : :011000:
-PEEK/[SP]  : :011001:
-PUSH/[--SP]: :011010:
-SP         : :011011:
-PC         : :011100:
-O          : :011101:
-[n]        : :011110: ; [next word]
-n          : :011111: ; next word
-v          :v:1vvvvv:
+A          :   :000000::All:
+B          :   :000001::All:
+C          :   :000010::All:
+X          :   :000011::All:
+Y          :   :000100::All:
+Z          :   :000101::All:
+I          :   :000110::All:
+J          :   :000111::All:
+Ra         :a  :001aaa::All:
+[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn:All: ; [next word + register]
+POP/[SP++] :   :011000::All:
+PEEK/[SP]  :   :011001::All:
+PUSH/[--SP]:   :011010::All:
+SP         :   :011011::All:
+PC         :   :011100::All:
+O          :   :011101::All:
+[n]        :   :011110:nnnnnnnnnnnnnnnn:All: ; [next word]
+n          :n  :011111:nnnnnnnnnnnnnnnn:All: ; next word
+v          :v  :1vvvvv::All:                 ; Literal value
+
+; If a number is defined, it's either any of the two
+; arguments in the bottom. probably it's v if the value is >0x20
+; use the const_mask value to know.
 
 ;Values: (6 bits)
 ;    0x00-0x07: register (A, B, C, X, Y, Z, I or J, in that order)

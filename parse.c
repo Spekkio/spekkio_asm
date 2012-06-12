@@ -106,8 +106,11 @@ void parseLine(const char * line, cpu_instr_set * set)
 {
   unsigned int i,c,a;
   char temp[100];
+  signed found_instr;
 
   temp[0]=temp[0];
+
+  found_instr=0;
 
   for(i=0;i<strlen(line);i++)
     {
@@ -123,12 +126,18 @@ void parseLine(const char * line, cpu_instr_set * set)
 	  printf("found tag: %s\n",temp);
 	}
 
-      for(c=0;c<set->num;c++)
+      if(!found_instr)
 	{
-	  if(!strncmp(&line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
+	  for(c=0;c<set->num;c++)
 	    {
-	      printf("found instr: %s - ",set->instr[c].instr_name);
+	      if(!strncmp(&line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
+		{
+		  printf("found instr: %s - ",set->instr[c].instr_name);
+		  found_instr=1;
+		}
 	    }
+	}else /*Parse arguments*/
+	{
 	}
     }
   printf("%s",line);
