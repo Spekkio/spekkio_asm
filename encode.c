@@ -3,9 +3,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <inttypes.h>
+#include <regex.h>
 #include "encode.h"
 #include "parse.h"
-
 
 void get_const_mask_bits(const char * op_desc, unmask * unmask)
 {

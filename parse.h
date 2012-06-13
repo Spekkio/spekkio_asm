@@ -6,6 +6,9 @@ typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
 #ifndef MAX_INSTRUCTIONS
 #define MAX_INSTRUCTIONS 100 /*max number of instructions in instruction set*/
 #endif
+#ifndef MAX_ARGUMENTS
+#define MAX_ARGUMENTS 100 /*max number of arguments in argument description list*/
+#endif
 #ifndef MAX_NAME_LEN /*maxstrlen of this string, instruction name "MOV", "SUB", "MUL"*/
 #define MAX_NAME_LEN 10
 #endif
@@ -34,17 +37,26 @@ typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
 
 typedef struct
 {
-  char parsed_arg[MAX_ARG_PARSED_LEN];
-  int arg_index;
-  int arg_shift;     /*the number of bits to shift the value up to find the right place*/
-  uint64_t arg_mask; /*the bitmask where 1's where the argument is.*/
-}arg_parse;
+  unsigned int arg_regex_len;
+  char arg_regex[MAX_NAME_LEN];
+  unsigned int arg_subargs_len;
+  unsigned int n_args;
+  char arg_subargs[MAX_ARG_LEN];
+  unsigned int arg_desc_len;
+  char arg_desc[MAX_OP_DESC];
+}argument;
+
+/*The list of arguments parsed from the set file*/
+typedef struct
+{
+  argument arg[MAX_ARGUMENTS];
+  unsigned int num;
+}argument_list;
 
 typedef struct
 {
   uint64_t const_;     /*The contant values of the opcode, surrounding the arguments*/
   uint64_t const_mask; /*The bitmask of the contant value*/
-  arg_parse arg[MAX_ARGS];
 }asm_parse;
 
 typedef struct
@@ -55,9 +67,9 @@ typedef struct
   char args[MAX_ARG_LEN];
   int op_len;
   char op_desc[MAX_OP_DESC];
-  asm_parse op;
 }cpu_instr;
 
+/*The list of instructions parsed from the set file*/
 typedef struct
 {
   cpu_instr instr[MAX_INSTRUCTIONS];
@@ -71,17 +83,20 @@ typedef struct
   is_def is;
 }symbol;
 
+/*The list of symbols parsed from the set file*/
+/*arguments and instructions without constant value*/
 typedef struct
 {
   int n_symbols;
   symbol * table;
 }symbol_table;
 
-
-void parseLine(const char * line, cpu_instr_set * set);
+int parseLine(const char * line, cpu_instr_set * set);
 void parseFile(FILE * f, cpu_instr_set * set);
-void loadCPUFile(const char * filename, cpu_instr_set * set);
+void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list);
 int parseCPULine(const char * line, cpu_instr * ret);
-void addInstruction(const cpu_instr * instr, cpu_instr_set * set);
-int parseARGLine(const char * line, cpu_instr * ret);
+void addInstruction(const cpu_instr instr, cpu_instr_set * set);
+int parseARGLine(const char * line, argument * ret);
+void addArgument(const argument arg, argument_list * arg_list);
+int match_argument(const char * match, const argument * arg);
 

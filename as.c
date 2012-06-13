@@ -22,17 +22,20 @@ int main(int argc, char **argv)
 {
   FILE * f;
   cpu_instr_set set;
+  argument_list arg_list;
+
   symbol * symbols;
   symbol_table sym_table;
   regex_t start;
-  regmatch_t rmt;
   unmask u;
+  size_t nmatch = 3; /*26*/
+  regmatch_t rmt[3];
 
   /*
   const char patt[] = "^\\[{1,1}[0123456789x]{1,6}[+]{1,1}[ABCXYZIJ]{1,1}\\]{1,1}$";
   */
-  const char patt[] = "^[\\ ]*\\[\\{1\\}[\\ ]*[0-9x]\\{1,1000\\}[\\ ]*+\\{1\\}[\\ ]*[0-9A-Za-z]\\{1,1000\\}[\\ ]*\\]\\{1\\}[\\ ]*$";
-  const char match[] = "[0x90+0x009]";
+  const char patt[] = "^[\\ ]*\\[\\{1\\}[\\ ]*\\([0-9x]\\{1,1000\\}\\)[\\ ]*+\\{1\\}[\\ ]*\\([0-9A-Za-z]\\{1,1000\\}\\)[\\ ]*\\]\\{1\\}[\\ ]*$";
+  char match[] = "[0x90+0x90]";
 
   get_const_mask_bits("0101asdkjas010", &u);
   match_maskstring_to_args("a,b", "aaaaaabbbbbb1010");
@@ -44,17 +47,19 @@ int main(int argc, char **argv)
   sym_table.table = symbols;
   sym_table.table = sym_table.table;
 
-  /*printf("%lu kB\n",sizeof(cpu_instr_set)/1024);*/
+  printf("%lu kB\n",sizeof(cpu_instr_set)/1024);
 
   if(!regcomp(&start, patt, 0))
     {
-      if(regexec(&start, match, 0, &rmt, 0))
+      if(regexec(&start, match, nmatch, rmt, 0))
 	{
 	  printf("No match\n");
 	}
       else
 	{
-	  printf("Match\n");
+	  match[rmt[1].rm_eo]='\0';
+	  match[rmt[2].rm_eo]='\0';
+	  printf("Match - ARG1:%s ARG2:%s \n", &match[rmt[1].rm_so],&match[rmt[2].rm_so]);
 	}
 
     } else printf("Some regexp error\n");  
@@ -71,7 +76,9 @@ int main(int argc, char **argv)
   printf("\nMicrochip test:\nADDWF 0x10,0,1 -> 0x%X\n",encode_opcode("f,d,a","001001daffffffff",MAX_ARGS,0x10,0,1));
   */
 
-  loadCPUFile("instr_sets/DCPU-16.set",&set);
+  loadCPUFile("instr_sets/DCPU-16-1_7.set",&set,&arg_list);
+
+  match_argument("[0x80+A]",&arg_list.arg[9]);
 
   /*  
   for(i=0;i<set.num;i++)
@@ -83,7 +90,7 @@ int main(int argc, char **argv)
 
   if(argc==2)
     {
-      printf("Opening: %s\n",argv[1]);
+      printf("Assembling %s..\n",argv[1]);
       f=fopen(argv[1],"r");
     }
 
