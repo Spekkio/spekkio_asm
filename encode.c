@@ -75,11 +75,11 @@ void match_maskstring_to_args(const char * op_args, const char * op_desc)
   for(i=0;i<strlen_op_desc;i++)
     {
       c++;
-      op_list[a].mask=0;
-      op_list[a].mask_value=0;
-      op_list[a].arg_len=0;
-      op_list[a].arg_val=0;
-      op_list[a].arg_shift=0;
+      op_list[i].mask=0;
+      op_list[i].mask_value=0;
+      op_list[i].arg_len=0;
+      op_list[i].arg_val=0;
+      op_list[i].arg_shift=0;
 
 
       for(a=0;a<arg_c;a++)

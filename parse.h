@@ -63,9 +63,9 @@ typedef struct
 {
   int instr_name_len;
   char instr_name[MAX_NAME_LEN];
-  int n_args;
+  unsigned int n_args;
   char args[MAX_ARG_LEN];
-  int op_len;
+  unsigned int op_len;
   char op_desc[MAX_OP_DESC];
 }cpu_instr;
 

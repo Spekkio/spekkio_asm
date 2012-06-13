@@ -242,17 +242,19 @@ void addArgument(const argument arg, argument_list * arg_list)
 
 int parseLine(const char * line, cpu_instr_set * set)
 {
-  unsigned int i,c,a;
+  unsigned int i,c,a,cnt_args,the_instr;
   char temp[100];
   signed found_instr;
 
   temp[0]=temp[0];
 
   found_instr=0;
+  cnt_args=0;
 
-  for(i=0;i<strlen(line);i++)
+  for(i=0;(i<strlen(line)) && (line[i]!='\n');i++)
     {
 
+      /*printf("[%u/%c]",i,line[i]);*/
       if(line[i]==':')
 	{
 	  a=0;
@@ -264,29 +266,58 @@ int parseLine(const char * line, cpu_instr_set * set)
 	  printf("found tag: %s\n",temp);
 	}
 
-      if(!found_instr)
+      if(found_instr==0)
 	{
 	  for(c=0;c<set->num;c++)
 	    {
 	      if(!strncmp(&line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
 		{
-		  printf("found instr: %s - ",set->instr[c].instr_name);
+		  printf("found instr: %s ",set->instr[c].instr_name);
 		  found_instr=1;
+		  the_instr=c;
+		  i+=set->instr[c].instr_name_len;
+
+		  if(i>strlen(line) || line[i]=='\n')
+		    {
+		      printf("%s",line);
+		      return 1;
+		    }
 		}
 	    }
 	}else /*Parse arguments*/
 	{
+	  /*expected number of arguments*/
+	  /*set->instr[c].n_args;*/
+
+	  /*printf("[Parse args]");*/
+	  if(cnt_args<set->instr[the_instr].n_args)
+	    {
+	      for(a=0;i<strlen(line) && (line[i]!=',') && (line[i]!='\n');i++)
+		{
+		  if(line[i]!=' ')
+		    {
+		      temp[a]=line[i];
+		      a++;
+		    }
+		}
+	      temp[a]='\0';
+	      if(line[i]==',' || line[i]=='\n')
+		{
+		  printf("%s,",temp);
+		  cnt_args++;
+		}
+	    }
 	}
     }
-  /*
-  if(!strncmp(line," \n",2))
+
+  if( (strlen(line)<=1) && (strncmp(line," \n",2)==0))
     {
-  */
-      printf("%s",line);
-      /*
-      return 1;
-    } printf("\n");
-      */
+    }
+  else
+    {
+      printf(" == %s",line);
+    }
+
   return found_instr;
 }
 

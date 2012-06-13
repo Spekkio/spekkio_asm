@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
   symbol * symbols;
   symbol_table sym_table;
-  unmask u;
+  /*unmask u;*/
   char result[30];
 
   f=0;
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 
   loadCPUFile("instr_sets/DCPU-16-1_7.set",&set,&arg_list);
 
-  get_const_mask_bits("0101asdkjas010", &u);
+  /*get_const_mask_bits("0101asdkjas010", &u);*/
   match_maskstring_to_args("a,b", "aaaaaabbbbbb1010");
   match_argument(result,30,"[0x80+A]",&arg_list.arg[9],1);
 
