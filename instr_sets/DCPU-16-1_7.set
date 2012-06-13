@@ -7,9 +7,11 @@
 ; a-z!=A-Z
 
 -OPTIONS
-WORD_LEN=STATIC     ; Words are x bit static, OP Codes they cannot vary in size, RISC type machine.
-WORD_SIZE=16        ; 16bit OPcodes
-WORDS_RAM=0x10000   ; Number of Words in RAM 
+NAME="DCPU-16"
+VERSION=1.7
+WORD_LEN=STATIC              ; Words are x bit static, OP Codes they cannot vary in size, RISC type machine.
+WORD_SIZE=16                 ; 16bit OPcodes
+WORDS_RAM=0x10000            ; Number of Words in RAM 
 
 ;BITS_RAM=0x100000 
 ;BYTES_RAM=0x20000  ; 128kByte RAM
@@ -31,23 +33,31 @@ XOR:b,a:aaaaaabbbbb01100:  ;sets b to b^a
 SHR:b,a:aaaaaabbbbb01101:  ;sets b to b>>>a, sets EX to ((b<<16)>>a)&0xffff (logical shift)
 ASR:b,a:aaaaaabbbbb01110:  ;sets b to b>>a, sets EX to ((b<<16)>>>a)&0xffff (arithmetic shift) (treats b as signed)
 SHL:b,a:aaaaaabbbbb01111:  ;sets b to b<<a, sets EX to ((b<<a)>>16)&0xffff
-IFB:b,a:aaaaaabbbbb10000: ;performs next instruction only if (b&a)!=0
-IFC:b,a:aaaaaabbbbb10001: ;performs next instruction only if (b&a)==0
-IFE:b,a:aaaaaabbbbb10010: ;performs next instruction only if b==a 
-IFN:b,a:aaaaaabbbbb10011: ;performs next instruction only if b!=a 
-IFG:b,a:aaaaaabbbbb10101: ;performs next instruction only if b>a 
-IFA:b,a:aaaaaabbbbb10110: ;performs next instruction only if b>a (signed)
-IFL:b,a:aaaaaabbbbb10111: ;performs next instruction only if b<a 
-IFU:b,a:aaaaaabbbbb11000: ;performs next instruction only if b<a (signed)
-;0x18
-;0x19
-ADX:b,a: ;sets b to b+a+EX, sets EX to 0x0001 if there is an over-flow, 0x0 otherwise
-SBX:b,a: ;sets b to b-a+EX, sets EX to 0xFFFF if there is an under-flow, 0x0 otherwise
-;0x1c
-;0x1d
-STI:b,a: ;sets b to a, then increases I and J by 1
-STD:b,a: ;sets b to a, then decreases I and J by 1
-
+IFB:b,a:aaaaaabbbbb10000:  ;performs next instruction only if (b&a)!=0
+IFC:b,a:aaaaaabbbbb10001:  ;performs next instruction only if (b&a)==0
+IFE:b,a:aaaaaabbbbb10010:  ;performs next instruction only if b==a 
+IFN:b,a:aaaaaabbbbb10011:  ;performs next instruction only if b!=a 
+IFG:b,a:aaaaaabbbbb10101:  ;performs next instruction only if b>a 
+IFA:b,a:aaaaaabbbbb10110:  ;performs next instruction only if b>a (signed)
+IFL:b,a:aaaaaabbbbb10111:  ;performs next instruction only if b<a 
+IFU:b,a:aaaaaabbbbb11000:  ;performs next instruction only if b<a (signed)
+ADX:b,a:aaaaaabbbbb11010:  ;sets b to b+a+EX, sets EX to 0x0001 if there is an over-flow, 0x0 otherwise
+SBX:b,a:aaaaaabbbbb11011:  ;sets b to b-a+EX, sets EX to 0xFFFF if there is an under-flow, 0x0 otherwise
+STI:b,a:aaaaaabbbbb11110:  ;sets b to a, then increases I and J by 1
+STD:b,a:aaaaaabbbbb11111:  ;sets b to a, then decreases I and J by 1
+JSR:a  :aaaaaa0000100000:  ;pushes the address of the next instruction to the stack, then sets PC to a
+INT:a  :aaaaaa0100000000:  ;triggers a software interrupt with message a 
+IAG:a  :aaaaaa0100100000:  ;sets a to IA
+IAS:a  :aaaaaa0101000000:  ;sets IA to a
+RFI:a  :aaaaaa0101100000:  ;disables interrupt queueing, pops A from the stack, then pops PC from the stack
+IAQ:a  :aaaaaa0110000000:  ;if a is nonzero, interrupts will be added to the queue instead of
+                           ;triggered. if a is zero, interrupts will be triggered as normal again
+HWN:a  :aaaaaa1000000000:  ;sets a to number of connected hardware devices
+HWQ:a  :aaaaaa1000100000:  ;sets A, B, C, X, Y registers to information about hardware 'a'
+                           ;A+(B<<16) is a 32 bit word identifying the hardware id
+                           ;C is the hardware version
+                           ;X+(Y<<16) is a 32 bit word identifying the manufacturer
+HWI:a  :aaaaaa1001000000:  ;sends an interrupt to hardware a
 
 ;An argument can contain the values 0-9 and x.
 
