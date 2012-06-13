@@ -1,36 +1,110 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
+#include <regex.h>
 #include "parse.h"
+
+#ifndef MAX_LONG_REGEX
+#define MAX_LONG_REGEX 1000
+#endif
 
 int match_argument(const char * match, const argument * arg)
 {
   unsigned int i,a;
-  unsigned int strlen_match;
+  /*unsigned int strlen_match;*/
   unsigned int reg_ctr;
-  char long_regex[1000];
-  /*regex_t regex;*/
+  char long_regex[MAX_LONG_REGEX];
+  char tempstring[MAX_ARG_PARSED_LEN];
+  signed found;  
+  size_t nmatch;
+  regmatch_t * pmatch;
+  regex_t regex;
 
-  strcpy(long_regex,"^[\\ ]*"); /*start*/
-  reg_ctr=strlen(long_regex);
-  reg_ctr=reg_ctr;
 
-  strlen_match = strlen(match);
+  /*This is how to parse out the patterns*/
+  /*size_t nmatch = 3; //number of arguments+1*/
+  /*regmatch_t pmatch[3]; //same here*/
+  /*char patt1[] = "[n+a]" // with args n,a*/
+  /*Shall transform into*/
+  /*char patt2[] = "^[\\ ]*\\[\\{1\\}[\\ ]*\\([0-9x]\\{1,1000\\}\\)[\\ ]*+\\{1\\}[\\ ]*\\([0-9A-Za-z]\\{1,1000\\}\\)[\\ ]*\\]\\{1\\}[\\ ]*$";*/
+  /**/
 
-  /*match a character to characters in arg_string*/
-  for(i=0;i<strlen_match;i++)
+  nmatch = arg->n_args+1;
+  pmatch = malloc(sizeof(regmatch_t)*nmatch);
+
+  if(pmatch)
     {
-      for(a=0;a<arg->arg_subargs_len;a++)
+      strcpy(long_regex,"^[\\ ]*"); /*start*/
+      reg_ctr=strlen(long_regex);
+
+      /*printf("matching: \"%s\" to \"%s\"\n",arg->arg_subargs, arg->arg_regex);*/
+
+      /*strlen_match = strlen(match);*/
+      /*Transform simple regex to POSIX regex*/
+      /*match a character to characters in arg_string*/
+      for(i=0;i<arg->arg_regex_len;i++)
 	{
-	  if((arg->arg_subargs[a]!=' ') && (arg->arg_subargs[a]!=','))
+	  for(a=0,found=0; (a<arg->arg_subargs_len) && (found==0);a++)
 	    {
-	      if(arg->arg_subargs[a] == arg->arg_regex[i])
+	      if((arg->arg_subargs[a]!=' ') && (arg->arg_subargs[a]!=','))
 		{
-		  printf("%c", match[i]);
+		  if(arg->arg_subargs[a] == arg->arg_regex[i])
+		    {
+		      reg_ctr+=snprintf(&long_regex[reg_ctr],MAX_LONG_REGEX,"\\([0-9A-Za-z]\\{1,1000\\}\\)[\\ ]*");
+		      found=1;
+		    }
+		}
+	    }
+	  if(!found)
+	    {
+	      if((arg->arg_regex[i]=='[') || arg->arg_regex[i]==']') /*these need to be escaped*/
+		{
+		  reg_ctr+=snprintf(&long_regex[reg_ctr],MAX_LONG_REGEX,"\\%c\\{1\\}[\\ ]*",arg->arg_regex[i]);
+		} else
+		{
+		  reg_ctr+=snprintf(&long_regex[reg_ctr],MAX_LONG_REGEX,"%c\\{1\\}[\\ ]*",arg->arg_regex[i]);
 		}
 	    }
 	}
+      reg_ctr+=sprintf(&long_regex[reg_ctr],"$");
+
+
+      if(!regcomp(&regex, long_regex, 0))
+	{
+	  if(regexec(&regex, match, nmatch, pmatch, 0))
+	    {
+	      /*printf("No match here...");*/
+	  
+	    }
+	  else
+	    {
+	      for(i=1;i<(arg->n_args+1);i++)
+		{
+		  /*pmatch contains the index where the found subarg is*/
+		  /*rm_so is the start index*/
+		  /*rm_eo is the end index*/
+		  /*rm_so-rm_eo is the lenght of the string*/
+		  memcpy(tempstring, &match[pmatch[i].rm_so], pmatch[i].rm_eo-pmatch[i].rm_so);
+		  tempstring[(pmatch[i].rm_eo-pmatch[i].rm_so)]='\0';
+		  /*printf("found subarg %u [%u, %u]: %s\n",i,pmatch[i].rm_so, pmatch[i].rm_eo,tempstring);*/
+		}
+	    }
+	}
+      else
+	{
+	  regfree(&regex);
+	  free(pmatch);
+	  return -1;
+	}
+
+      regfree(&regex);
+      free(pmatch);
+
+    } /*if(pmatch)*/
+  else
+    {
+      return -1; /**/
     }
 
   return 0;
@@ -236,6 +310,7 @@ int parseARGLine(const char * line, argument * ret)
 	}
     }
   ret->arg_subargs[d]='\0';
+  ret->arg_subargs_len=d;
   ret->n_args=c;
 
   /*printf("%s, %u\n",ret->arg_subargs, ret->n_args);*/ /*DEBUG*/

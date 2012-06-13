@@ -1,7 +1,7 @@
 objects = parse.o encode.o
 all_objects = as $(objects)
 flags=-g -Wall -Wextra -Werror -pedantic
-std=-ansi
+std=-std=c99
 optimize=
 
 target: $(all_objects)
