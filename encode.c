@@ -47,6 +47,7 @@ void match_maskstring_to_args(const char * op_args, const char * op_desc)
   /*Number of arguments cannot be more than max number of bits in a OP code.*/
   Parsed_ARG op_list[MAX_OP_DESC];
 
+  c=0;
   const_=0;
   const_mask=0;
   const_=const_;

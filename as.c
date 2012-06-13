@@ -40,9 +40,11 @@ int main(int argc, char **argv)
 
   /*get_const_mask_bits("0101asdkjas010", &u);*/
   match_maskstring_to_args("a,b", "aaaaaabbbbbb1010");
-  match_argument(result,30,"[0x80+A]",&arg_list.arg[9],1);
 
-  printf("Result: %s\n",result);
+  match_argument(result,30,"[0x80+A]",&arg_list.arg[9],0);
+  printf("Argument 1 of %s is %s\n","[0x80+A]",result);
+  match_argument(result,30,"[0x80+A]",&arg_list.arg[9],1);
+  printf("Argument 2 of %s is %s\n","[0x80+A]",result);
 
   if(argc==2)
     {
@@ -52,7 +54,11 @@ int main(int argc, char **argv)
 
   if((f!=0) && (symbols!=0))
     {
-      parseFile(f,&set);
+      if(parseFile(f,&set)==1)
+	{
+	  printf("Success!\n");
+	}
+
       fclose(f);
       free(symbols);
     } else printf("Specify a file.\n");

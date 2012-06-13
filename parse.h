@@ -92,7 +92,7 @@ typedef struct
 }symbol_table;
 
 int parseLine(const char * line, cpu_instr_set * set);
-void parseFile(FILE * f, cpu_instr_set * set);
+int parseFile(FILE * f, cpu_instr_set * set);
 void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list);
 int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr instr, cpu_instr_set * set);

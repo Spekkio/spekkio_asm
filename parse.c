@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
+#include <ctype.h>
 #include "parse.h"
 
 #ifndef MAX_LONG_REGEX
@@ -240,21 +241,44 @@ void addArgument(const argument arg, argument_list * arg_list)
   arg_list->num++;
 }
 
+#ifndef MAX_CNT_OF_LINE
+#define MAX_CNT_OF_LINE 1000
+#endif
+
 int parseLine(const char * line, cpu_instr_set * set)
 {
   unsigned int i,c,a,cnt_args,the_instr;
   char temp[100];
-  signed found_instr;
+  signed found_instr,found_macro;
+  char case_line[MAX_CNT_OF_LINE];
+  signed whitespace_clear_flag, whitespace_clear_flag_delay;
+
+  for(i=0;(i<1000) && (line[i]!='\n') && (line[i]!='\0');i++)
+    {
+      case_line[i] = toupper(line[i]);
+    }
 
   temp[0]=temp[0];
 
   found_instr=0;
+  found_macro=0;
   cnt_args=0;
 
+  
+  whitespace_clear_flag=0;
+  whitespace_clear_flag_delay=0;
   for(i=0;(i<strlen(line)) && (line[i]!='\n');i++)
     {
 
       /*printf("[%u/%c]",i,line[i]);*/
+
+      if((line[i]!=' ') && (line[i]!='\t') && (line[i]!='\r') && (line[i]!='\r'))
+	{
+	  /*Set if any other character than a whitespace is found*/
+	  whitespace_clear_flag_delay=whitespace_clear_flag;
+	  whitespace_clear_flag=1;
+	}
+
       if(line[i]==':')
 	{
 	  a=0;
@@ -264,25 +288,63 @@ int parseLine(const char * line, cpu_instr_set * set)
 	    }
 	  temp[a]='\0';
 	  printf("found tag: %s\n",temp);
+
+	  whitespace_clear_flag=0; /*Count tags as whitespace*/
+	  whitespace_clear_flag_delay=0;
+
+	}
+      else if(line[i]=='#')
+	{
+	  a=0;
+	  for(i=i+1,a=0;((i<strlen(line)) && (line[i]!=' '));i++,a++)
+	    {
+	      temp[a]=line[i];
+	    }
+	  temp[a]='\0';
+
+	  printf("found macro: %s ",temp);	  
+	  if(strncmp(temp,"define",6)==0)
+	    {
+	      for(i=i+1,a=0;((i<strlen(line)) && (line[i]!=' '));i++,a++)
+		{
+		  temp[a]=line[i];
+		}
+	      temp[a]='\0';
+	      printf("%s = ",temp);
+	      for(i=i+1,a=0;((i<strlen(line)) && (line[i]!='\n') && (line[i]!='\r'));i++,a++)
+		{
+		  temp[a]=line[i];
+		}
+	      temp[a]='\0';
+	      printf("%s (Use addSymbol())",temp);
+
+	      found_macro=1; /*we can use parse arguments further down, and define args for macros somewhere.*/
+
+	    } else
+	    {
+	      fprintf(stderr,"Unknown macro \"%s\" ",temp);
+	      return -1; /*macro not defined*/
+	    }
 	}
 
       if(found_instr==0)
 	{
 	  for(c=0;c<set->num;c++)
 	    {
-	      if(!strncmp(&line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
-		{
-		  printf("found instr: %s ",set->instr[c].instr_name);
-		  found_instr=1;
-		  the_instr=c;
-		  i+=set->instr[c].instr_name_len;
+	      if(whitespace_clear_flag_delay==0)
+		if(!strncmp(&case_line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
+		  {
+		    printf("found instr: %s ",set->instr[c].instr_name);
+		    found_instr=1;
+		    the_instr=c;
+		    i+=set->instr[c].instr_name_len;
 
-		  if(i>strlen(line) || line[i]=='\n')
-		    {
-		      printf("%s",line);
-		      return 1;
-		    }
-		}
+		    if(i>strlen(line) || line[i]=='\n' || line[i]=='\r')
+		      {
+			printf("%s",line);
+			return 1;
+		      }
+		  }
 	    }
 	}else /*Parse arguments*/
 	{
@@ -292,7 +354,7 @@ int parseLine(const char * line, cpu_instr_set * set)
 	  /*printf("[Parse args]");*/
 	  if(cnt_args<set->instr[the_instr].n_args)
 	    {
-	      for(a=0;i<strlen(line) && (line[i]!=',') && (line[i]!='\n');i++)
+	      for(a=0;i<strlen(line) && (line[i]!=',') && (line[i]!='\n') && (line[i]!='\r');i++)
 		{
 		  if(line[i]!=' ')
 		    {
@@ -301,7 +363,7 @@ int parseLine(const char * line, cpu_instr_set * set)
 		    }
 		}
 	      temp[a]='\0';
-	      if(line[i]==',' || line[i]=='\n')
+	      if(line[i]==',' || line[i]=='\n' || line[i]=='\r')
 		{
 		  printf("%s,",temp);
 		  cnt_args++;
@@ -310,15 +372,24 @@ int parseLine(const char * line, cpu_instr_set * set)
 	}
     }
 
-  if( (strlen(line)<=1) && (strncmp(line," \n",2)==0))
+  if(whitespace_clear_flag==0)
     {
+      /*Found only white spaces*/
+      return 1;
     }
   else
     {
+      if(found_instr)
+	{
+	  if((cnt_args+1)==set->instr[the_instr].n_args)
+	    {
+	      fprintf(stderr,"Missing argument in instruction \"%s\" ",set->instr[the_instr].instr_name);
+	    }
+	}
       printf(" == %s",line);
     }
 
-  return found_instr;
+  return found_instr | found_macro;
 }
 
 
@@ -428,13 +499,16 @@ int parseCPULine(const char * line, cpu_instr * ret)
   return 1;
 }
 
-void parseFile(FILE * f, cpu_instr_set * set)
+int parseFile(FILE * f, cpu_instr_set * set)
 {
   char c;
   char lineBuffer[1000];
   unsigned int line_counter;
+  unsigned int real_line_counter;
+
   c=' ';
   line_counter=0;
+  real_line_counter=0;
   while(c!=EOF)
     {
       c=fgetc(f);
@@ -442,7 +516,7 @@ void parseFile(FILE * f, cpu_instr_set * set)
       /*Remove comments*/
       if(c==';')
 	{
-	  while(c!='\n')
+	  while((c!='\n') && (c!='\r'))
 	    {
 	      c=fgetc(f);
 	    }
@@ -454,7 +528,7 @@ void parseFile(FILE * f, cpu_instr_set * set)
 	{
 	  lineBuffer[line_counter]=' ';
 	  line_counter++;
-	  while( ((c==' ') || (c=='\t')) && (c!='\n') )
+	  while( ((c==' ') || (c=='\t')) && (c!='\n') && (c!='\r'))
 	    {
 	      c=fgetc(f);
 	    }
@@ -463,7 +537,7 @@ void parseFile(FILE * f, cpu_instr_set * set)
       /*Remove comments in end of line*/
       if(c==';')
 	{
-	  while(c!='\n')
+	  while((c!='\n') && (c!='\r'))
 	    {
 	      c=fgetc(f);
 	    }
@@ -475,16 +549,29 @@ void parseFile(FILE * f, cpu_instr_set * set)
 	  line_counter++;
 	  if((c=='\n'))
 	    {
+	      real_line_counter++;
 	      lineBuffer[line_counter]='\0';
 	      if(line_counter>1)
 		{
-		  if(!parseLine(lineBuffer,set))
+		  switch(parseLine(lineBuffer,set))
 		    {
-		      printf("---Found nothing...\n");
+		    case -1:
+		      fprintf(stderr,"[parseLine() returned -1] @ line: %u\n",real_line_counter);
+		      return -1;
+		    case 0:
+		      fprintf(stderr,"[parseLine() returned 0] @ line: %u\n",real_line_counter);
+		      return 0;
+		    case 1:
+		      break;
+		    default:
+		      fprintf(stderr,"[parseLine() returned ?] @ line: %u\n",real_line_counter);
+		      return 1;
 		    }
 		}
 	      line_counter=0;
 	    }
 	}
     }
+
+  return 1;
 }
