@@ -98,5 +98,5 @@ int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr instr, cpu_instr_set * set);
 int parseARGLine(const char * line, argument * ret);
 void addArgument(const argument arg, argument_list * arg_list);
-int match_argument(const char * match, const argument * arg);
+int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number);
 

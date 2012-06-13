@@ -9,18 +9,19 @@
 #define MAX_LONG_REGEX 1000
 #endif
 
-int match_argument(const char * match, const argument * arg)
+int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number)
 {
   unsigned int i,a;
   /*unsigned int strlen_match;*/
   unsigned int reg_ctr;
   char long_regex[MAX_LONG_REGEX];
   char tempstring[MAX_ARG_PARSED_LEN];
-  signed found;  
+  signed found, success;  
   size_t nmatch;
   regmatch_t * pmatch;
   regex_t regex;
 
+  success = 0;
 
   /*This is how to parse out the patterns*/
   /*size_t nmatch = 3; //number of arguments+1*/
@@ -79,16 +80,29 @@ int match_argument(const char * match, const argument * arg)
 	    }
 	  else
 	    {
+	      /*pmatch contains the index where the found subarg is*/
+	      /*rm_so is the start index*/
+	      /*rm_eo is the end index*/
+	      /*rm_so-rm_eo is the lenght of the string*/
+	      if(arg_number<=arg->n_args)
+		{
+		  /*Potential Bug*/
+		  /*Could need some more checking, check if rm_so and rm_eo doesn't point outside string, etc*/
+		  memcpy(tempstring, &match[pmatch[arg_number+1].rm_so], pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so);
+		  tempstring[(pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so)]='\0';
+		  strncpy(result, tempstring, max_result_len);
+		  success=1;
+		}
+
+	      /*Make all args*/
+	      /*
 	      for(i=1;i<(arg->n_args+1);i++)
 		{
-		  /*pmatch contains the index where the found subarg is*/
-		  /*rm_so is the start index*/
-		  /*rm_eo is the end index*/
-		  /*rm_so-rm_eo is the lenght of the string*/
 		  memcpy(tempstring, &match[pmatch[i].rm_so], pmatch[i].rm_eo-pmatch[i].rm_so);
 		  tempstring[(pmatch[i].rm_eo-pmatch[i].rm_so)]='\0';
-		  /*printf("found subarg %u [%u, %u]: %s\n",i,pmatch[i].rm_so, pmatch[i].rm_eo,tempstring);*/
+		  //printf("found subarg %u [%u, %u]: %s\n",i,pmatch[i].rm_so, pmatch[i].rm_eo,tempstring);
 		}
+	      */
 	    }
 	}
       else
@@ -107,7 +121,11 @@ int match_argument(const char * match, const argument * arg)
       return -1; /**/
     }
 
-  return 0;
+  if(success)
+    {
+      return 0;
+    }
+  return 1;
 }
 
 void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list)
