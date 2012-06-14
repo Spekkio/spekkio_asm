@@ -13,13 +13,13 @@ typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
 #define MAX_NAME_LEN 10
 #endif
 #ifndef MAX_ARG_LEN /*maxstrlen of this string, list of arguments "a,b,c,d"*/
-#define MAX_ARG_LEN 100
+#define MAX_ARG_LEN (64*2)
 #endif
 #ifndef MAX_OP_DESC /*this string, arg->binary string "aaaaaabbbbbb0101"*/
 #define MAX_OP_DESC 64
 #endif
 #ifndef MAX_ARGS /*max number of arguments one instruction can have, count from this string "a,b,c,d"=4*/
-#define MAX_ARGS 10
+#define MAX_ARGS MAX_OP_DESC /*Actually one argument per bit*/
 #endif
 #ifndef MAX_OP_DESC /*max bit length of one op code, this string "aaaabbbb0101"*/
 #define MAX_OP_DESC 64
@@ -34,6 +34,21 @@ typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
 #define MAX_SYMBOLS 0xFFFF
 #endif
 
+/*This is the maximum length of a line in the source file.*/
+#ifndef MAX_CNT_OF_LINE /*case_line in parseLine()*/
+#define MAX_CNT_OF_LINE 1000
+#endif
+
+/*Return values for parseLine()*/
+typedef enum PARSE_LINE_RET
+  {
+    PARSE_LINE_RET_ERROR,
+    PARSE_LINE_RET_NOTHING,
+    PARSE_LINE_RET_INSTRUCTION,
+    PARSE_LINE_RET_MACRO,
+    PARSE_LINE_RET_TAG
+  }PARSE_LINE_RET;
+
 
 typedef struct
 {
@@ -42,8 +57,13 @@ typedef struct
   unsigned int arg_subargs_len;
   unsigned int n_args;
   char arg_subargs[MAX_ARG_LEN];
+
   unsigned int arg_desc_len;
   char arg_desc[MAX_OP_DESC];
+
+  unsigned int arg_overflow_len;
+  char arg_overflow[MAX_OP_DESC];
+
 }argument;
 
 /*The list of arguments parsed from the set file*/
@@ -91,8 +111,23 @@ typedef struct
   symbol * table;
 }symbol_table;
 
-int parseLine(const char * line, cpu_instr_set * set);
-int parseFile(FILE * f, cpu_instr_set * set);
+/*Used for the assembler to match a argument in the arg_list*/
+typedef struct
+{
+  unsigned int arg_len;
+  char arg[MAX_ARG_PARSED_LEN];
+}small_argument;
+
+/*Used by the assembler to match a instruction in the instr_set*/
+typedef struct
+{
+  unsigned int instr_index; /*index number of the instruction in cpu_instr_set*/
+  unsigned int n_args;
+  small_argument arg[MAX_ARGS]; /*A list of the found arguments, they have to be matched later*/
+}instruction;
+
+PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store);
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list);
 void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list);
 int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr instr, cpu_instr_set * set);

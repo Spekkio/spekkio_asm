@@ -10,6 +10,7 @@
 #define MAX_LONG_REGEX 1000
 #endif
 
+/*returns 0 if success, -1 if memory error or other error, 1 if no match*/
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number)
 {
   unsigned int i,a;
@@ -241,19 +242,16 @@ void addArgument(const argument arg, argument_list * arg_list)
   arg_list->num++;
 }
 
-#ifndef MAX_CNT_OF_LINE
-#define MAX_CNT_OF_LINE 1000
-#endif
-
-int parseLine(const char * line, cpu_instr_set * set)
+PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store/*, macro * store*/)
 {
+  PARSE_LINE_RET return_value;
   unsigned int i,c,a,cnt_args,the_instr;
-  char temp[100];
-  signed found_instr,found_macro;
+  char temp[MAX_ARG_PARSED_LEN+MAX_NAME_LEN]; /*stores names, args, and macros*/
+  signed found_instr;
   char case_line[MAX_CNT_OF_LINE];
   signed whitespace_clear_flag, whitespace_clear_flag_delay;
 
-  for(i=0;(i<1000) && (line[i]!='\n') && (line[i]!='\0');i++)
+  for(i=0;(i<MAX_CNT_OF_LINE) && (line[i]!='\n') && (line[i]!='\0');i++)
     {
       case_line[i] = toupper(line[i]);
     }
@@ -261,9 +259,8 @@ int parseLine(const char * line, cpu_instr_set * set)
   temp[0]=temp[0];
 
   found_instr=0;
-  found_macro=0;
   cnt_args=0;
-
+  return_value=PARSE_LINE_RET_NOTHING;
   
   whitespace_clear_flag=0;
   whitespace_clear_flag_delay=0;
@@ -272,7 +269,7 @@ int parseLine(const char * line, cpu_instr_set * set)
 
       /*printf("[%u/%c]",i,line[i]);*/
 
-      if((line[i]!=' ') && (line[i]!='\t') && (line[i]!='\r') && (line[i]!='\r'))
+      if(!isspace(line[i]))
 	{
 	  /*Set if any other character than a whitespace is found*/
 	  whitespace_clear_flag_delay=whitespace_clear_flag;
@@ -318,12 +315,13 @@ int parseLine(const char * line, cpu_instr_set * set)
 	      temp[a]='\0';
 	      printf("%s (Use addSymbol())",temp);
 
-	      found_macro=1; /*we can use parse arguments further down, and define args for macros somewhere.*/
+	      /*found_macro=1;*/ /*we can use parse arguments further down, and define args for macros somewhere.*/
+	      return_value = PARSE_LINE_RET_MACRO;
 
 	    } else
 	    {
 	      fprintf(stderr,"Unknown macro \"%s\" ",temp);
-	      return -1; /*macro not defined*/
+	      return PARSE_LINE_RET_ERROR; /*macro not defined*/
 	    }
 	}
 
@@ -334,15 +332,17 @@ int parseLine(const char * line, cpu_instr_set * set)
 	      if(whitespace_clear_flag_delay==0)
 		if(!strncmp(&case_line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
 		  {
-		    printf("found instr: %s ",set->instr[c].instr_name);
+		    /*printf("found instr: %s ",set->instr[c].instr_name);*/
 		    found_instr=1;
 		    the_instr=c;
 		    i+=set->instr[c].instr_name_len;
 
+		    store->instr_index = c;
+
 		    if(i>strlen(line) || line[i]=='\n' || line[i]=='\r')
 		      {
-			printf("%s",line);
-			return 1;
+			/*printf("%s",line);*/
+			/*return 1;*/
 		      }
 		  }
 	    }
@@ -365,8 +365,11 @@ int parseLine(const char * line, cpu_instr_set * set)
 	      temp[a]='\0';
 	      if(line[i]==',' || line[i]=='\n' || line[i]=='\r')
 		{
-		  printf("%s,",temp);
+		  /*printf("%s,",temp);*/
+		  strncpy(store->arg[cnt_args].arg, temp,MAX_ARG_PARSED_LEN);
+		  store->arg[cnt_args].arg_len=strlen(temp);
 		  cnt_args++;
+		  store->n_args=cnt_args;
 		}
 	    }
 	}
@@ -375,7 +378,7 @@ int parseLine(const char * line, cpu_instr_set * set)
   if(whitespace_clear_flag==0)
     {
       /*Found only white spaces*/
-      return 1;
+      return PARSE_LINE_RET_NOTHING;
     }
   else
     {
@@ -384,12 +387,17 @@ int parseLine(const char * line, cpu_instr_set * set)
 	  if((cnt_args+1)==set->instr[the_instr].n_args)
 	    {
 	      fprintf(stderr,"Missing argument in instruction \"%s\" ",set->instr[the_instr].instr_name);
+	      return_value = PARSE_LINE_RET_ERROR;
+	    }
+	  else
+	    {
+	      return_value = PARSE_LINE_RET_INSTRUCTION;
 	    }
 	}
-      printf(" == %s",line);
+      /*printf(" == %s",line);*/
     }
 
-  return found_instr | found_macro;
+  return return_value;
 }
 
 
@@ -403,7 +411,7 @@ int parseARGLine(const char * line, argument * ret)
    /*Read the argument regex code*/
   for(i=0,a=0;(i<strlen(line)) && (line[i]!=':');i++)
     {
-      if(line[i]!=' ')
+      if(!isblank(line[i]))
 	{
 	  ret->arg_regex[i]=line[i];
 	  a++;
@@ -433,6 +441,26 @@ int parseARGLine(const char * line, argument * ret)
   ret->arg_subargs_len=d;
   ret->n_args=c;
 
+  for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
+    {
+      if(isalpha(line[i]) || (line[i]=='0' || line[i]=='1'))
+	{
+	  ret->arg_desc[a]=line[i];
+	}
+    }
+  ret->arg_desc[i]='\0';
+  ret->arg_desc_len=a;
+
+  for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
+    {
+      if(isalpha(line[i]) || (line[i]=='0' || line[i]=='1'))
+	{
+	  ret->arg_overflow[a]=line[i];
+	}
+    }
+  ret->arg_overflow[i]='\0';
+  ret->arg_overflow_len=a;
+
   /*printf("%s, %u\n",ret->arg_subargs, ret->n_args);*/ /*DEBUG*/
 
   return 1;
@@ -453,7 +481,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
    /*Read the instruction name*/
   for(i=0,a=0;(i<strlen(line)) && (line[i]!=':');i++)
     {
-      if(line[i]!=' ')
+      if(!isblank(line[i]))
 	{
 	  ret->instr_name[i]=line[i];
 	  a++;
@@ -467,7 +495,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
   /*Read and count the argument list*/
   for(i=i+1,c=0,a=0,d=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
     {
-      if((line[i]>='a' && line[i]<='z') || (line[i]>='A' && line[i]<='Z'))
+      if(isalpha(line[i]))
 	{
 	  ret->args[a]=line[i];
 	  c++;
@@ -486,7 +514,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
 
   for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
     {
-      if((line[i]>='a' && line[i]<='z') || (line[i]>='A' && line[i]<='Z') || (line[i]>='0' && line[i]<='1'))
+      if(isalpha(line[i]) || (line[i]=='0' || line[i]=='1'))
 	{
 	  ret->op_desc[a]=line[i];
 	}
@@ -499,12 +527,16 @@ int parseCPULine(const char * line, cpu_instr * ret)
   return 1;
 }
 
-int parseFile(FILE * f, cpu_instr_set * set)
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list)
 {
   char c;
-  char lineBuffer[1000];
-  unsigned int line_counter;
+  char result[MAX_ARG_PARSED_LEN];
+  char lineBuffer[MAX_CNT_OF_LINE];
+  int match_ret,isdigit_,ishexa_, ismatch_=0;
+  unsigned int line_counter, inner_ctr, inner_ctr2, i;
   unsigned int real_line_counter;
+  instruction found_instr;
+  PARSE_LINE_RET ret;
 
   c=' ';
   line_counter=0;
@@ -524,11 +556,12 @@ int parseFile(FILE * f, cpu_instr_set * set)
 
       /*Shorten trailing white-spaces*/
       /*But keep 1 space*/
-      if((c==' ') || (c=='\t'))
+      if(isblank(c))
 	{
 	  lineBuffer[line_counter]=' ';
 	  line_counter++;
-	  while( ((c==' ') || (c=='\t')) && (c!='\n') && (c!='\r'))
+	  /*((c==' ') || (c=='\t')) && (c!='\n') && (c!='\r'))*/
+	  while(isblank(c))
 	    {
 	      c=fgetc(f);
 	    }
@@ -553,19 +586,90 @@ int parseFile(FILE * f, cpu_instr_set * set)
 	      lineBuffer[line_counter]='\0';
 	      if(line_counter>1)
 		{
-		  switch(parseLine(lineBuffer,set))
+		  ret=parseLine(lineBuffer,set,&found_instr);
+		  switch(ret)
 		    {
-		    case -1:
+		    case PARSE_LINE_RET_ERROR:
 		      fprintf(stderr,"[parseLine() returned -1] @ line: %u\n",real_line_counter);
 		      return -1;
-		    case 0:
-		      fprintf(stderr,"[parseLine() returned 0] @ line: %u\n",real_line_counter);
-		      return 0;
-		    case 1:
+		    case PARSE_LINE_RET_INSTRUCTION:
+
+		      /*
+			parse_arguments();
+		       */
+
+		      printf("%s ",set->instr[found_instr.instr_index].instr_name);
+		      for(inner_ctr=0;inner_ctr<found_instr.n_args;inner_ctr++)
+			{
+			  printf("%s",found_instr.arg[inner_ctr].arg);
+			  inner_ctr2=0;
+			  match_ret=1;
+			  /*printf("Argument %u: ",inner_ctr+1);*/
+			  while((match_ret!=0) && (inner_ctr2<arg_list->num))
+			    {
+			      isdigit_=1;
+			      ismatch_=0;
+			      if(!strncmp(found_instr.arg[inner_ctr].arg, "0x", 2))
+				{
+				  ishexa_=1;
+				}else ishexa_=0;
+			      for(i=0;i<found_instr.arg[inner_ctr].arg_len;i++)
+				{
+				  if(!isdigit(found_instr.arg[inner_ctr].arg[0]))
+				    {
+				      isdigit_=0;
+				    }
+				  if(!isxdigit(found_instr.arg[inner_ctr].arg[0]))
+				    {
+				      ishexa_=0;
+				    }
+				}
+
+			      if(isdigit_ || ishexa_)
+				{
+				  if(isdigit_)
+				    {
+				      /*printf("  It's a digit: %s\n",found_instr.arg[inner_ctr].arg);*/
+				      match_ret=0;
+				    }
+				  else if(ishexa_)
+				    {
+				      /*printf("  It's hexadec: %s\n",found_instr.arg[inner_ctr].arg);*/
+				      match_ret=0;
+				    }
+				}
+			      else
+				{
+				  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr.arg[inner_ctr].arg,&arg_list->arg[inner_ctr2],inner_ctr);
+				  ismatch_=1;
+				}
+			      inner_ctr2++;
+			    }
+			  if(ismatch_==1)
+			    {
+			      inner_ctr2--;
+			      /*
+			      printf(" [matched \"%s\" with \"%s\" ret=%u, value=%s]\n",found_instr.arg[inner_ctr].arg,arg_list->arg[inner_ctr2].arg_regex,match_ret, arg_list->arg[inner_ctr2].arg_desc);
+			      */
+			      printf("=%s[+%s], ",arg_list->arg[inner_ctr2].arg_desc,arg_list->arg[inner_ctr2].arg_overflow);
+			    }
+			  if(match_ret!=0)
+			    {
+			      printf(" match: %s = %s, ",result,arg_list->arg[inner_ctr2].arg_desc);
+			    }
+			}
+		      printf("\n");
+
+		      break;
+		    case PARSE_LINE_RET_MACRO:
+		      break;
+		    case PARSE_LINE_RET_TAG:
+		      break;
+		    case PARSE_LINE_RET_NOTHING:
 		      break;
 		    default:
-		      fprintf(stderr,"[parseLine() returned ?] @ line: %u\n",real_line_counter);
-		      return 1;
+		      fprintf(stderr,"[parseLine() returned %u] @ line: %u\n",ret,real_line_counter);
+		      return -1;
 		    }
 		}
 	      line_counter=0;

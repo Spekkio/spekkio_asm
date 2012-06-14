@@ -26,25 +26,28 @@ int main(int argc, char **argv)
   symbol * symbols;
   symbol_table sym_table;
   /*unmask u;*/
-  char result[30];
+  /*char result[30];*/
 
   f=0;
 
   symbols = malloc(sizeof(symbol)*MAX_SYMBOLS);
   sym_table.table = symbols;
   sym_table.table = sym_table.table;
-
-  printf("%lu kB\n",sizeof(cpu_instr_set)/1024);
+  
+  printf("instruction set: %lu kB\n",sizeof(cpu_instr_set)/1024);
+  printf("argument list: %lu kB\n",sizeof(arg_list)/1024);
 
   loadCPUFile("instr_sets/DCPU-16-1_7.set",&set,&arg_list);
 
   /*get_const_mask_bits("0101asdkjas010", &u);*/
-  match_maskstring_to_args("a,b", "aaaaaabbbbbb1010");
+  /*match_maskstring_to_args("a,b", "aaaaaabbbbbb1010");*/
 
+  /*Testing
   match_argument(result,30,"[0x80+A]",&arg_list.arg[9],0);
   printf("Argument 1 of %s is %s\n","[0x80+A]",result);
   match_argument(result,30,"[0x80+A]",&arg_list.arg[9],1);
   printf("Argument 2 of %s is %s\n","[0x80+A]",result);
+  */
 
   if(argc==2)
     {
@@ -54,7 +57,7 @@ int main(int argc, char **argv)
 
   if((f!=0) && (symbols!=0))
     {
-      if(parseFile(f,&set)==1)
+      if(parseFile(f,&set, &arg_list)==1)
 	{
 	  printf("Success!\n");
 	}
