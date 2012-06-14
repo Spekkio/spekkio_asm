@@ -79,7 +79,7 @@ PUSH       :   :011010::All: ; [--SP]
 SP         :   :011011::All:
 PC         :   :011100::All:
 O          :   :011101::All:
-[n]        :   :011110:nnnnnnnnnnnnnnnn:All: ; [next word]
+[n]        :n  :011110:nnnnnnnnnnnnnnnn:All: ; [next word]
 n          :n  :011111:nnnnnnnnnnnnnnnn:All: ; next word
 v          :v  :1vvvvv::All:                 ; Literal value
 
