@@ -33,6 +33,9 @@ typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
 #ifndef MAX_SYMBOLS
 #define MAX_SYMBOLS 0xFFFF
 #endif
+#ifndef MAX_MATCH_RANGES
+#define MAX_MATCH_RANGES 10
+#endif
 
 /*This is the maximum length of a line in the source file.*/
 #ifndef MAX_CNT_OF_LINE /*case_line in parseLine()*/
@@ -49,6 +52,16 @@ typedef enum PARSE_LINE_RET
     PARSE_LINE_RET_TAG
   }PARSE_LINE_RET;
 
+typedef enum S_U {SIGNED, UNSIGNED}S_U;
+
+typedef struct
+{
+  uint64_t umin, umax;
+  int64_t smin, smax;
+  signed single_hex;
+  uint64_t hex, hexmask;
+  enum S_U su;
+}match_ranges;
 
 typedef struct
 {
@@ -64,6 +77,10 @@ typedef struct
   unsigned int arg_overflow_len;
   char arg_overflow[MAX_OP_DESC];
 
+  unsigned int n_ranges;
+  match_ranges ranges[MAX_MATCH_RANGES];
+
+  regex_t reg;
 }argument;
 
 /*The list of arguments parsed from the set file*/
@@ -134,4 +151,4 @@ void addInstruction(const cpu_instr instr, cpu_instr_set * set);
 int parseARGLine(const char * line, argument * ret);
 void addArgument(const argument arg, argument_list * arg_list);
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number);
-
+void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list);

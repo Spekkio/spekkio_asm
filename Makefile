@@ -1,4 +1,4 @@
-objects = parse.o encode.o
+objects = parse.o encode.o setup_regex.o
 all_objects = as $(objects)
 flags=-g -Wall -Wextra -Werror -pedantic
 std=-std=c99
@@ -15,6 +15,9 @@ parse.o: parse.c parse.h
 
 encode.o: encode.c encode.h
 	gcc $(optimize) $(flags) $(std) -c encode.c
+
+setup_regex.o: setup_regex.c setup_regex.h
+	gcc $(optimize) $(flags) $(std) -c setup_regex.c
 
 clean:
 	rm -rf instr_sets/*~ *~ *.o $(all_objects)
