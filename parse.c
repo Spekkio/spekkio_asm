@@ -6,10 +6,28 @@
 #include <ctype.h>
 #include "parse.h"
 #include "setup_regex.h"
+#include "smallfunc.h"
 
 #ifndef MAX_LONG_REGEX
 #define MAX_LONG_REGEX 1000
 #endif
+
+/*return 0 on success, 1 if no match, index stored in ret*/
+int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl)
+{
+  unsigned int i;
+
+  for(i=0;i<symb->n_symbols;i++)
+    {
+      if(!strncmp(match, symb->table[i].string, strl))
+	{
+	  *ret=i;
+	  return 0;
+	}
+    }
+
+  return 1;
+}
 
 /*returns 0 if success, -1 if memory error or other error, 1 if no match*/
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number)
@@ -20,9 +38,15 @@ int match_argument(char * result, const int max_result_len, const char * match, 
   regmatch_t * pmatch;
 
   success = 0;
+  pmatch = 0;
 
-  nmatch = arg->n_args+1;
-  pmatch = malloc(sizeof(regmatch_t)*nmatch);
+  /*printf("N Args: %u\n", arg->n_args);*/
+
+  if(arg->n_args>0)
+    {
+      nmatch = arg->n_args+1;
+      pmatch = malloc(sizeof(regmatch_t)*nmatch);
+    }
 
   if(pmatch)
     {
@@ -38,6 +62,15 @@ int match_argument(char * result, const int max_result_len, const char * match, 
 	      /*rm_so is the start index*/
 	      /*rm_eo is the end index*/
 	      /*rm_so-rm_eo is the lenght of the string*/
+
+	      /*
+	      for(i=0;i<arg->n_args;i++)
+		{
+		  printf("Start index: %u\n",pmatch[i].rm_so);
+		  printf("End index: %u\n",pmatch[i].rm_eo);
+		}
+	      */
+
 	      if(arg_number<=arg->n_args)
 		{
 		  /*Potential Bug*/
@@ -82,7 +115,7 @@ int match_argument(char * result, const int max_result_len, const char * match, 
   return 1;
 }
 
-void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list)
+void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table)
 {
   FILE *f;
   char c;
@@ -91,6 +124,7 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
   PARSE_TYPE type;
   argument arg;
   cpu_instr instr;
+  symbol symb;
 
   set->num=0;
 
@@ -153,6 +187,11 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 			  printf("Parsing arguments..\n");
 			  type=ARGU;
 			}
+		      if(!strncmp(lineBuffer,"-SYMBOLS",8))
+			{
+			  printf("Parsing symbols..\n");
+			  type=SYMB;
+			}
 
 		      switch(type)
 			{
@@ -169,6 +208,14 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 			      addArgument(arg, arg_list);
 			    }
 			  break;
+
+			case SYMB:
+			  if(parseSYMBLine(lineBuffer,&symb))
+			    {
+			      addSymbol(symb, sym_table);
+			    }
+			  break;
+
 			default: break;
 			}
 
@@ -368,6 +415,18 @@ int parseARGLine(const char * line, argument * ret)
   regcomp(&range1, regex1, 0);
   regcomp(&single, regex2, 0);
   */
+  
+  const char regex_test[] = "^[\\ ]*\\([a-zA-Z\\[\\],+-]*\\)[\\ ]*[:]\\{1\\}$";
+  regex_t range1;
+  if(!regcomp(&range1, regex_test, 0))
+    {
+      regfree(&range1);
+    }
+  else
+    {
+      printf("regex compilation error\n");
+    }
+
 
   if(line[0]=='-')
     return 0;
@@ -385,7 +444,7 @@ int parseARGLine(const char * line, argument * ret)
   ret->arg_regex[a]='\0';
   ret->arg_regex_len=a;
 
-  /*printf("%s, %u\n",ret->arg_regex, a);*/ /*DEBUG*/
+  printf("%s, %u\n",ret->arg_regex, a); /*DEBUG*/
 
   /*Read and count the argument list*/
   for(i=i+1,c=0,a=0,d=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
@@ -427,24 +486,17 @@ int parseARGLine(const char * line, argument * ret)
   ret->arg_overflow[a]='\0';
   ret->arg_overflow_len=a;
 
-  for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':') && (line[i]!='*');i++)
+
+  for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':');i++)
     {
-      if(isxdigit(line[i]) || (line[i]=='[' || line[i]=='u' || line[i]=='s' ||
-              line[i]=='.' || line[i]=='x' || line[i]=='|' || line[i]=='-'))
+      if(isdigit(line[i]) || line[i]=='+' || line[i]=='-' || line[i]==',')
 	{
 	  tempstring[a]=line[i];
 	  a++;
-	}else
-      if(line[i]==']')
-	{
-	  /*parse it*/
-	  /* "^\\[\\([0-9x]\\{\\}\\)\\]" */
-	  tempstring[a]=line[i];
-	  tempstring[a+1]='\0';
-	  a=0;
-	  printf("\nRange: %s\n",tempstring);
 	}
     }
+  tempstring[a]='\0';
+  printf("%s: \n",tempstring);
 
 
   /*printf("%s, %u\n",ret->arg_subargs, ret->n_args);*/ /*DEBUG*/
@@ -452,6 +504,96 @@ int parseARGLine(const char * line, argument * ret)
   return 1;
 }
 
+void addSymbol(const symbol symb, symbol_table * sym_table)
+{
+
+  strncpy(sym_table->table[sym_table->n_symbols].string, symb.string, MAX_SYM_NAME_LEN);
+  strncpy(sym_table->table[sym_table->n_symbols].value_str, symb.value_str, MAX_SYM_NAME_LEN);
+  sym_table->table[sym_table->n_symbols].value = symb.value;
+  sym_table->table[sym_table->n_symbols].bitlen = symb.bitlen;
+  sym_table->table[sym_table->n_symbols].is = symb.is;
+
+  sym_table->n_symbols++;
+}
+
+/*return 0 if value was found and stored, else 1*/
+int parseAssignSymbolValue(const char * tempstr, const unsigned int strl,  symbol * symb)
+{
+  if(string_contains(tempstr,"01",strl))
+    {
+      symb->value=binstr_to_uint64(tempstr, strl);
+      symb->bitlen=strl;
+      symb->is=DEFINED;
+      /*printf("This is binary: %lu, len:%u\n",symb->value,symb->bitlen);*/
+      return 0;
+    }else
+    if(string_contains(tempstr,"0123456789ABCDEFabcdefx",strl))
+      {
+	if(sscanf(tempstr,"0x%lX",&symb->value)==1)
+	  {
+	    symb->bitlen=(strl-2)*4;
+	    return 0;
+	  }else
+	  if(sscanf(tempstr,"0x%lx",&symb->value)==1)
+	    {
+	      symb->bitlen=(strl-2)*4;
+	      return 0;
+	    }
+      }
+  return 1;
+}
+
+int parseSYMBLine(const char * line, symbol * symb)
+{
+  unsigned int i,strl;
+  char tempstr[MAX_SYM_NAME_LEN];
+  signed success;
+
+  success=0;
+
+  symb->is=UNDEFINED;
+
+  if(!regexec(&symbol_list, line, sym_nmatch, sym_pmatch, 0))
+    {
+      /*printf("match!\n");*/
+      for(i=1;i<(sym_nmatch);i++)
+	{
+	  if(sym_pmatch[i].rm_so != sym_pmatch[i].rm_eo)
+	    if((sym_pmatch[i].rm_eo-sym_pmatch[i].rm_so) < MAX_SYM_NAME_LEN)
+	      if(sym_pmatch[i].rm_so < MAX_SYM_NAME_LEN)
+		if(sym_pmatch[i].rm_eo < MAX_SYM_NAME_LEN)
+		  {
+		    strl=sym_pmatch[i].rm_eo - sym_pmatch[i].rm_so;
+		    strncpy(tempstr, &line[sym_pmatch[i].rm_so], strl);
+		    tempstr[strl]='\0';
+
+		    switch(i)
+		      {
+		      case 1: /*This is where the string, name of the symbol is*/
+			/*printf("Symbol name: %s\n",tempstr);*/
+			strncpy(symb->string, tempstr, MAX_SYM_NAME_LEN);
+			break;
+		      case 2: /*Value of the symbol, currently it can hade binary encoding*/
+			strncpy(symb->value_str, tempstr, MAX_SYM_NAME_LEN);
+			/*printf("Value string: %s\n",symb->value_str);*/
+
+			parseAssignSymbolValue(tempstr, strl, symb);
+
+			success|=1;
+
+			break;
+		      case 3:/*Extended*/
+			break;
+		      default:
+			fprintf(stderr,"Syntax error in set file: Unkown[%u] when parsing Symbols, regular expression doesn't match set file syntax.\n",i);
+			break;
+		      }
+		  }
+	}
+    }
+
+  return success;
+}
 
 int parseCPULine(const char * line, cpu_instr * ret)
 {
@@ -513,7 +655,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
   return 1;
 }
 
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list)
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
 {
   char c;
   char lineBuffer[MAX_CNT_OF_LINE];
@@ -581,7 +723,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 		      /*
 			parse_arguments();
 		       */
-		      parse_line_ret_instr(&found_instr, set, arg_list);
+		      parse_line_ret_instr(&found_instr, set, arg_list, symb_list);
 
 		      break;
 		    case PARSE_LINE_RET_MACRO:
@@ -603,11 +745,74 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
   return 1;
 }
 
+/*This function gets all the strings of one instruction*/
+/*parsed into different variables and pointers*/
+/*String of the instruction = set->instr[found_instr->instr_index].instr_name*/
+/*String of each argument[x] = found_instr->arg[x].arg*/
+/*Number of arguments that was found = found_instr->n_args*/
+/*Number of arguments instruction should have = set->instr[found_instr->instr_index].n_args*/
 
-void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list)
+void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
 {
-  int match_ret,isdigit_,ishexa_, ismatch_=0;
-  unsigned int inner_ctr, inner_ctr2, i;
+  unsigned int i, sc;
+  ARG_TYPE is;
+  set=set;
+  arg_list=arg_list;
+  symb_list=symb_list;
+  /*These two must be the same, I think they are checked before*/
+  /*I'm starting to loose track...*/
+  if(found_instr->n_args == set->instr[found_instr->instr_index].n_args)
+    {
+      printf("%s ",set->instr[found_instr->instr_index].instr_name);
+
+      /*loop through the arguments*/
+      /*to be able to parse subarguments, this can be made into a function*/
+      /*that can be used recursive.*/
+      for(i=0;i<found_instr->n_args;i++)
+	{
+
+	  /*Check if argument is an encoded number, hex or decimal*/
+
+	  
+	  /*This can be a function in smallfunc.c*/
+	  if(!strncmp(found_instr->arg[i].arg, "0x", 2))
+	    {
+	      /*This has potential to be a hex number*/
+	      is=ISHEX;
+	      for(sc=2;(sc<found_instr->arg[i].arg_len) && (is=ISHEX);sc++)
+		{
+		  if(isxdigit(found_instr->arg[i].arg[sc]))
+		    {
+		      /*It is still hex*/
+		      is=ISHEX;
+		    }else
+		    {
+		      /*It is not hex*/
+		      is=ISUNDEFINED;
+		    }
+		}
+	    }
+
+	  printf("%s",found_instr->arg[i].arg);
+	  switch(is)
+	    {
+	    case ISHEX:
+	      printf("=HEX, ");
+	      break;
+	    default:
+	      printf(", ");
+	      break;
+	    }
+	}/*Loop through argumets hex.*/
+      printf("\n");
+    }
+}
+
+/*This code is becoming really hard to follow*/
+void parse_line_ret_instr_(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
+{
+  int match_ret,isdigit_,ishexa_, ismatch_=0, issymbol=0;
+  unsigned int inner_ctr, inner_ctr2, i, ret_index;
   char result[MAX_ARG_PARSED_LEN];
 
   printf("%s ",set->instr[found_instr->instr_index].instr_name);
@@ -652,8 +857,21 @@ void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set *
 	      }
 	    else
 	      {
-		match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[inner_ctr].arg,&arg_list->arg[inner_ctr2],inner_ctr);
-		ismatch_=1;
+		if(match_symbol(&ret_index, found_instr->arg[inner_ctr].arg, symb_list, found_instr->arg[inner_ctr].arg_len))
+		  {
+		    printf(", %s",symb_list->table[ret_index].string);
+		    issymbol|=1;
+		    ismatch_=0;
+		  }else
+		  {
+		    result[0]='\0';
+		    match_ret=0;
+		    match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[inner_ctr].arg,&arg_list->arg[inner_ctr2],inner_ctr);
+		    if(!match_ret)
+		      {
+			ismatch_|=1;
+		      }
+		  }
 	      }
 	    inner_ctr2++;
 	  }

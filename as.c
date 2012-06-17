@@ -21,54 +21,47 @@
 int main(int argc, char **argv)
 {
   FILE * f;
-  cpu_instr_set * set;
-  argument_list * arg_list;
+  cpu_instr_set set;
+  argument_list arg_list;
 
   symbol * symbols;
   symbol_table sym_table;
   /*unmask u;*/
   /*char result[30];*/
+  /*00000000 0000 0001*/
 
   f=0;
-  set = 0;
-  arg_list = 0;
   symbols = 0;
+  sym_table.n_symbols=0;
+
+  if(!setup_global_regex())
+    {
+      fprintf(stderr,"Failed to setup Global Regex strings\n");
+      free_global_regex();
+      return 1;
+    }
 
   symbols = malloc(sizeof(symbol)*MAX_SYMBOLS);
   sym_table.table = symbols;
-  sym_table.table = sym_table.table;
-
-  set = malloc(sizeof(cpu_instr_set));
-  arg_list = malloc(sizeof(argument_list));
 
   if((symbols!=0))
     {
       memset(symbols, '\0', sizeof(symbol)*MAX_SYMBOLS);
+      sym_table.table_limit = MAX_SYMBOLS;
     }
 
-  if((set!=0))
-    {
-      memset(set, '\0', sizeof(cpu_instr_set));
-    }
-
-  if((arg_list!=0))
-    {
-      memset(arg_list, '\0', sizeof(argument_list));
-    }
-  
   printf("instruction set: %lu kB\n",sizeof(cpu_instr_set)/1024);
   printf("argument list: %lu kB\n",sizeof(argument_list)/1024);
 
-  loadCPUFile("instr_sets/DCPU-16-1_7.set",set,arg_list);
+  loadCPUFile("instr_sets/DCPU-16-1_7.set",&set,&arg_list, &sym_table);
 
   printf("Creating POSIX regular expressions...");
-  if(make_all_arg_regex(arg_list))
+  if(make_all_arg_regex(&arg_list))
     {
       fprintf(stderr,"Could not create POSIX regular expressions.\n");
-      free_all_regex(arg_list);
+      free_all_regex(&arg_list);
+      free_global_regex();
       free(symbols);
-      free(set);
-      free(arg_list);
       fclose(f);
       return 1;
     } else
@@ -92,9 +85,9 @@ int main(int argc, char **argv)
       f=fopen(argv[1],"r");
     }
 
-  if((f!=0) && (symbols!=0) && (set!=0) && (arg_list!=0))
+  if((f!=0) && (symbols!=0))
     {
-      if(parseFile(f,set, arg_list)==1)
+      if(parseFile(f,&set, &arg_list, &sym_table)==1)
 	{
 	  printf("Success!\n");
 	}
@@ -102,10 +95,9 @@ int main(int argc, char **argv)
       fclose(f);
     } else printf("Specify a file.\n");
 
-  free_all_regex(arg_list);
+  free_all_regex(&arg_list);
+  free_global_regex();
   free(symbols);
-  free(set);
-  free(arg_list);
   
   return 0;
 }

@@ -1,7 +1,8 @@
 #include <inttypes.h>
 
 typedef enum is_def {DEFINED, UNDEFINED} is_def;
-typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
+typedef enum PARSE_TYPE {INSTR, ARGU, OPT, SYMB} PARSE_TYPE;
+typedef enum ARG_TYPE {ISHEX, ISNUMBER, ISSYMBOL, IS_MATCHED, ISUNDEFINED} ARG_TYPE;
 
 #ifndef MAX_INSTRUCTIONS
 #define MAX_INSTRUCTIONS 100 /*max number of instructions in instruction set*/
@@ -30,6 +31,9 @@ typedef enum PARSE_TYPE {INSTR, ARGU, OPT} PARSE_TYPE;
 #ifndef MAX_SYM_NAME_LEN /*max length of one symbol name, variable, pointer*/
 #define MAX_SYM_NAME_LEN 100
 #endif
+#ifndef MAX_SYM_VALUE_LEN
+#define MAX_SYM_VALUE_LEN 1000
+#endif
 #ifndef MAX_SYMBOLS
 #define MAX_SYMBOLS 0xFFFF
 #endif
@@ -52,16 +56,12 @@ typedef enum PARSE_LINE_RET
     PARSE_LINE_RET_TAG
   }PARSE_LINE_RET;
 
-typedef enum S_U {SIGNED, UNSIGNED}S_U;
-
 typedef struct
 {
-  uint64_t umin, umax;
-  int64_t smin, smax;
-  signed single_hex;
-  uint64_t hex, hexmask;
-  enum S_U su;
-}match_ranges;
+  char token;
+  int64_t correction;
+  uint64_t bitmask;
+}subarg;
 
 typedef struct
 {
@@ -70,15 +70,13 @@ typedef struct
   unsigned int arg_subargs_len;
   unsigned int n_args;
   char arg_subargs[MAX_ARG_LEN];
-
   unsigned int arg_desc_len;
   char arg_desc[MAX_OP_DESC];
 
+  subarg sub_arg[MAX_OP_DESC];
+
   unsigned int arg_overflow_len;
   char arg_overflow[MAX_OP_DESC];
-
-  unsigned int n_ranges;
-  match_ranges ranges[MAX_MATCH_RANGES];
 
   regex_t reg;
 }argument;
@@ -116,16 +114,19 @@ typedef struct
 typedef struct
 {
   char string[MAX_SYM_NAME_LEN];
+  char value_str[MAX_SYM_VALUE_LEN];
   uint64_t value;
+  unsigned int bitlen;
   is_def is;
 }symbol;
 
 /*The list of symbols parsed from the set file*/
-/*arguments and instructions without constant value*/
+/*arguments and instructions with constant value*/
 typedef struct
 {
-  int n_symbols;
+  unsigned int n_symbols;
   symbol * table;
+  unsigned int table_limit;
 }symbol_table;
 
 /*Used for the assembler to match a argument in the arg_list*/
@@ -144,11 +145,18 @@ typedef struct
 }instruction;
 
 PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store);
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list);
-void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list);
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list);
+void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table);
 int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr instr, cpu_instr_set * set);
 int parseARGLine(const char * line, argument * ret);
 void addArgument(const argument arg, argument_list * arg_list);
+int parseSYMBLine(const char * line, symbol * symb);
+void addSymbol(const symbol symb, symbol_table * sym_table);
+
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number);
-void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list);
+
+void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list);
+
+int parseAssignSymbolValue(const char * tempstr, const unsigned int strl,  symbol * symb);
+int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl);
