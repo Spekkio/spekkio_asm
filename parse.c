@@ -403,7 +403,8 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 
 int parseARGLine(const char * line, argument * ret)
 {
-  unsigned int i,c,a,d;
+  unsigned int i,c,a,d,quit;
+  long int result;
   char tempstring[1000];
   /*
   char regex1_result[20];
@@ -445,7 +446,7 @@ int parseARGLine(const char * line, argument * ret)
   ret->arg_regex[a]='\0';
   ret->arg_regex_len=a;
 
-  printf("%s, %u\n",ret->arg_regex, a); /*DEBUG*/
+  /*printf("%s, %u\n",ret->arg_regex, a);*/ /*DEBUG*/
 
   /*Read and count the argument list*/
   for(i=i+1,c=0,a=0,d=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
@@ -488,16 +489,28 @@ int parseARGLine(const char * line, argument * ret)
   ret->arg_overflow_len=a;
 
 
-  for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':');i++)
+  quit=0;
+  for(i=i+1,a=0;(i<strlen(line)) && (quit==0);i++)
     {
-      if(isdigit(line[i]) || line[i]=='+' || line[i]=='-' || line[i]==',')
+      if(isdigit(line[i]) || line[i]=='+' || line[i]=='-')
 	{
 	  tempstring[a]=line[i];
 	  a++;
+	} else if(line[i]==',' || line[i]==':')
+	{
+	  if(line[i]==':')
+	    {
+	      quit=1;
+	    }
+	  tempstring[a]='\0';
+	  a=0;
+	  if(sscanf(tempstring,"%li",&result)==1)
+	    {
+	      ret->shift = result;
+	      /*Potential problem here*/
+	    } else return 0; /*Make error here*/
 	}
     }
-  tempstring[a]='\0';
-  printf("%s: \n",tempstring);
 
 
   /*printf("%s, %u\n",ret->arg_subargs, ret->n_args);*/ /*DEBUG*/

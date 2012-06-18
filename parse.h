@@ -77,7 +77,7 @@ typedef struct
 
   unsigned int arg_overflow_len;
   char arg_overflow[MAX_OP_DESC];
-
+  long int shift;
   regex_t reg;
 }argument;
 

@@ -203,7 +203,7 @@ unsigned int encode_opcode_n(const instruction * found_instr, const char * op_ar
 
   /*assign values, and mask out overflow bits*/
   for(i=0;i<arg_c;i++)
-    {  
+    {
       value = found_instr->arg[i].value;
       op_list[i].mask_value= value & ((1<<(op_list[i].arg_len+1))-1);
       op_list[i].mask_value= op_list[i].mask_value << op_list[i].arg_shift;
