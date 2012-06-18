@@ -4,8 +4,8 @@
 #include <string.h>
 #include <inttypes.h>
 #include <regex.h>
-#include "encode.h"
 #include "parse.h"
+#include "encode.h"
 #include "setup_regex.h"
 
 #define REG_A 0
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
   printf("instruction set: %lu kB\n",sizeof(cpu_instr_set)/1024);
   printf("argument list: %lu kB\n",sizeof(argument_list)/1024);
 
-  loadCPUFile("instr_sets/DCPU-16-1_7.set",&set,&arg_list, &sym_table);
+  loadCPUFile("instr_sets/DCPU-16.set",&set,&arg_list, &sym_table);
 
   printf("Creating POSIX regular expressions...");
   if(make_all_arg_regex(&arg_list))

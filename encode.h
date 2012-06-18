@@ -22,4 +22,4 @@ typedef struct
 unsigned int encode_opcode(const char * op_args, const char * op_desc, const int num, ...);
 void match_maskstring_to_args(const char * op_args, const char * op_desc);
 void get_const_mask_bits(const char * op_desc, unmask * unmask);
-
+unsigned int encode_opcode_n(const instruction * found_instr, const char * op_args, const char * op_desc);

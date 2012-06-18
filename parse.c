@@ -5,6 +5,7 @@
 #include <regex.h>
 #include <ctype.h>
 #include "parse.h"
+#include "encode.h"
 #include "setup_regex.h"
 #include "smallfunc.h"
 
@@ -647,7 +648,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
 	  ret->op_desc[a]=line[i];
 	}
     }
-  ret->op_desc[i]='\0';
+  ret->op_desc[a]='\0';
   ret->op_len=a;
   /*
   printf("-- %s %u:%s %u:%s %u\n",ret->instr_name,ret->instr_name_len,ret->args, ret->n_args,ret->op_desc,ret->op_len);
@@ -663,6 +664,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
   unsigned int real_line_counter;
   instruction found_instr;
   PARSE_LINE_RET ret;
+  assemble_ret as_ret;
 
   c=' ';
   line_counter=0;
@@ -723,7 +725,11 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 		      /*
 			parse_arguments();
 		       */
-		      parse_line_ret_instr(&found_instr, set, arg_list, symb_list);
+		      as_ret = assemble(&found_instr, set, arg_list, symb_list);
+		      if(as_ret.is==DEFINED)
+		      {
+			printf("..OK, code=0x%lX, size=%u\n", as_ret.opcode, as_ret.size);
+		      } else printf("\n");
 
 		      break;
 		    case PARSE_LINE_RET_MACRO:
@@ -752,10 +758,20 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 /*Number of arguments that was found = found_instr->n_args*/
 /*Number of arguments instruction should have = set->instr[found_instr->instr_index].n_args*/
 
-void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
+/*This functon assemble all the values/opcodes for each instruction */
+/*and save the unknown symbols that doesn't have a value for later.*/
+/*This function can be called, assemble 1st pass*/
+assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
 {
-  unsigned int i, sc;
+  uint64_t p_buf;
+  unsigned int i, sc, ret_sym;
   ARG_TYPE is;
+  assemble_ret ret;
+
+  ret.is=UNDEFINED;
+  ret.opcode=0;
+  ret.size=0;
+
   set=set;
   arg_list=arg_list;
   symb_list=symb_list;
@@ -770,7 +786,7 @@ void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set *
       /*that can be used recursive.*/
       for(i=0;i<found_instr->n_args;i++)
 	{
-
+	  is=ISUNDEFINED;
 	  /*Check if argument is an encoded number, hex or decimal*/
 
 	  
@@ -779,7 +795,7 @@ void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set *
 	    {
 	      /*This has potential to be a hex number*/
 	      is=ISHEX;
-	      for(sc=2;(sc<found_instr->arg[i].arg_len) && (is=ISHEX);sc++)
+	      for(sc=2;(sc<found_instr->arg[i].arg_len) && (is==ISHEX);sc++)
 		{
 		  if(isxdigit(found_instr->arg[i].arg[sc]))
 		    {
@@ -793,19 +809,107 @@ void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set *
 		}
 	    }
 
+	  /*Test if normal number*/
+	  if(is==ISUNDEFINED)
+	    {
+	      is=ISNUMBER;
+	      for(sc=0;(sc<found_instr->arg[i].arg_len) && (is==ISNUMBER);sc++)
+		{
+		  if(isdigit(found_instr->arg[i].arg[sc]))
+		    {
+		      /*It is still a number*/
+		      is=ISNUMBER;
+		    }else
+		    {
+		      /*It is not a number*/
+		      is=ISUNDEFINED;
+		    }
+		}
+	    }
+
+	  /*Search the symbol list*/
+	  if(is==ISUNDEFINED)
+	    {
+	      if(!match_symbol(&ret_sym, found_instr->arg[i].arg, symb_list, MAX_ARG_PARSED_LEN))
+		{
+		  is=ISSYMBOL;
+		}
+	    }
+
 	  printf("%s",found_instr->arg[i].arg);
+	  found_instr->arg[i].is=UNDEFINED;
+	  p_buf = 0;
 	  switch(is)
 	    {
 	    case ISHEX:
-	      printf("=HEX, ");
+	      printf("=HEX");
+
+	      if(sscanf(found_instr->arg[i].arg,"0x%lX",&p_buf)==1)
+		{
+		  found_instr->arg[i].value = p_buf;
+		  found_instr->arg[i].is=DEFINED;
+		}
+	      else if(sscanf(found_instr->arg[i].arg,"0x%lx",&p_buf)==1)
+		{
+		  found_instr->arg[i].value = p_buf;
+		  found_instr->arg[i].is=DEFINED;
+		}
 	      break;
+
+	    case ISNUMBER:
+	      printf("=NUMBER");
+
+	      if(sscanf(found_instr->arg[i].arg,"%lu",&p_buf)==1)
+		{
+		  found_instr->arg[i].value = p_buf;
+		  found_instr->arg[i].is=DEFINED;
+		}
+
+	      break;
+
+	    case ISSYMBOL:
+	      printf("=SYMBOL");
+	      if(symb_list->table[ret_sym].is==DEFINED)
+		{
+		  found_instr->arg[i].value = symb_list->table[ret_sym].value;
+		  found_instr->arg[i].is=DEFINED;
+		}
+	      break;
+
 	    default:
-	      printf(", ");
+	      printf("=UNDEFSYMBOL");
 	      break;
 	    }
+
+	  if(found_instr->arg[i].is==DEFINED)
+	    {
+	      printf("(0x%lX), ", found_instr->arg[i].value);
+	    }else
+	    {
+	      printf(", ");
+	    }
+
 	}/*Loop through argumets hex.*/
-      printf("\n");
+
+      /*loop again to see if we got an undef*/
+      ret.is=DEFINED;
+      for(i=0;i<found_instr->n_args;i++)
+	{
+	  if(found_instr->arg[i].is==UNDEFINED)
+	    {
+	      ret.is=UNDEFINED;
+	    }
+	}
+
+      /*If it's defined*/
+      if(ret.is==DEFINED)
+	{
+	  /*put in the argument values and get the opcode.*/
+	  ret.opcode = encode_opcode_n(found_instr, set->instr[found_instr->instr_index].args, set->instr[found_instr->instr_index].op_desc);
+	}
     }
+
+  return ret;
 }
 
 /*This code is becoming really hard to follow*/

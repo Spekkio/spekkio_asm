@@ -51,3 +51,28 @@ uint64_t binstr_to_uint64(const char * str, const unsigned int size)
     }
   return temp;
 }
+
+/*count n of arguments int a string "a,b,c,d"=4*/
+unsigned int count_args(const char * op_args, const unsigned int strlen_op_args)
+{
+  unsigned int i;
+  unsigned int arg_c;
+  /*Parse op_args, and count number of args*/
+  for(i=0,arg_c=0;i<strlen_op_args;i++)
+    {
+      if(op_args[i]!=',')
+	{
+	  if(op_args[i]!=' ')
+	    {
+	      /*this was used in encode_opcode to make the string "abcd" out of "a,b,c,d"*/
+	      /*op_list[arg_c].arg_t = op_args[i];*/
+	      arg_c++;
+	    }
+	}
+      else
+	{
+
+	}
+    }
+  return arg_c;
+}

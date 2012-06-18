@@ -134,6 +134,8 @@ typedef struct
 {
   unsigned int arg_len;
   char arg[MAX_ARG_PARSED_LEN];
+  uint64_t value;
+  is_def is;
 }small_argument;
 
 /*Used by the assembler to match a instruction in the instr_set*/
@@ -143,6 +145,13 @@ typedef struct
   unsigned int n_args;
   small_argument arg[MAX_ARGS]; /*A list of the found arguments, they have to be matched later*/
 }instruction;
+
+typedef struct
+{
+  uint64_t opcode;
+  unsigned int size; /*Resulting size of the opcode in bits*/
+  is_def is; /*Was there an undefined value? Or was the assembling complete.*/
+}assemble_ret;
 
 PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store);
 int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list);
@@ -156,7 +165,7 @@ void addSymbol(const symbol symb, symbol_table * sym_table);
 
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number);
 
-void parse_line_ret_instr(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list);
+assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list);
 
 int parseAssignSymbolValue(const char * tempstr, const unsigned int strl,  symbol * symb);
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl);
