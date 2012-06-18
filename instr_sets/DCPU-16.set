@@ -43,25 +43,28 @@ IFB:a,b:bbbbbbaaaaaa1111:   ; - performs next instruction only if (a&b)!=0
 
 ;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Used for what instr:
 -ARGUMENTS
-A          :   :000000::All:
-B          :   :000001::All:
-C          :   :000010::All:
-X          :   :000011::All:
-Y          :   :000100::All:
-Z          :   :000101::All:
-I          :   :000110::All:
-J          :   :000111::All:
-Ra         :a  :001aaa::All:
-[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn:All: ; [next word + register]
-POP        :   :011000::All: ; [SP++]
-PEEK       :   :011001::All: ; [SP]
-PUSH       :   :011010::All: ; [--SP]
-SP         :   :011011::All:
-PC         :   :011100::All:
-O          :   :011101::All:
-[n]        :   :011110:nnnnnnnnnnnnnnnn:All: ; [next word]
-n          :n  :011111:nnnnnnnnnnnnnnnn:All: ; next word
-v          :v  :1vvvvv::All:                 ; Literal value
+R[a]       :a  :001aaa:::All:
+Ra         :a  :001aaa:::All:
+[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::All: ; [next word + register]
+[n]        :n  :011110:nnnnnnnnnnnnnnnn::All: ; [next word]
+n          :n  :011111:nnnnnnnnnnnnnnnn::All: ; next word
+v          :v  :1vvvvv::+1:All:                 ; Literal value
+
+-SYMBOLS
+A          :000000:All:
+B          :000001:All:
+C          :000010:All:
+X          :000011:All:
+Y          :000100:All:
+Z          :000101:All:
+I          :000110:All:
+J          :000111:All:
+POP        :011000:All: ; [SP++]
+PEEK       :011001:All: ; [SP]
+PUSH       :011010:All: ; [--SP]
+SP         :011011:All:
+PC         :011100:All:
+O          :011101:All:
 
 
 ; a found variable, can be represented with regexp
