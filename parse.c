@@ -400,122 +400,81 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
   return return_value;
 }
 
-
 int parseARGLine(const char * line, argument * ret)
 {
-  unsigned int i,c,a,d,quit;
-  long int result;
-  char tempstring[1000];
-  /*
-  char regex1_result[20];
-  char regex2_result[20];
+  unsigned int i,strl;
+  char tempstr[MAX_ARG_PARSED_LEN];
+  signed success;
 
-  const char regex1[] = "^\\[\\{1,1\\}\\([su]\\{1,1\\}\\)|\\{1,1\\}\\([-]\\{0,1\\}[0-9A-Fa-f]\\{1,20}\\)..\\([0-9xA-Fa-f]\\)\\]\\{1,1\\}$";
-  const char regex2[] = "^\\[\\{1,1\\}\\([su]\\{1,1\\}\\)|\\{1,1\\}\\([-]\\{0,1\\}[0-9A-Fa-f]\\{1,20}\\)\\]\\{1,1\\}$";
-  regex_t range1, single;
-
-  regcomp(&range1, regex1, 0);
-  regcomp(&single, regex2, 0);
-  */
-  
-  const char regex_test[] = "^[\\ ]*\\([a-zA-Z\\[\\],+-]*\\)[\\ ]*[:]\\{1\\}$";
-  regex_t range1;
-  if(!regcomp(&range1, regex_test, 0))
+  success=0;
+  /*Working string*/
+  /*"test[a+b]:a,b:aaabbb0101:01jsd:+1,-1:All:"*/
+  if(!regexec(&arg_list, line, arg_nmatch, arg_pmatch, 0))
     {
-      regfree(&range1);
-    }
-  else
-    {
-      printf("regex compilation error\n");
-    }
-
-
-  if(line[0]=='-')
-    return 0;
-
-   /*Read the argument regex code*/
-  for(i=0,a=0;(i<strlen(line)) && (line[i]!=':');i++)
-    {
-      ret->arg_regex[a]='\0';
-      if(!isblank(line[i]))
+      /*printf("match!\n");*/
+      for(i=1;i<(arg_nmatch);i++)
 	{
-	  ret->arg_regex[a]=line[i];
-	  a++;
-	}
-    }
-  ret->arg_regex[a]='\0';
-  ret->arg_regex_len=a;
+	  /*if(arg_pmatch[i].rm_so != arg_pmatch[i].rm_eo)*/
+	    if((arg_pmatch[i].rm_eo-arg_pmatch[i].rm_so) < MAX_ARG_PARSED_LEN)
+	      if(arg_pmatch[i].rm_so < MAX_ARG_PARSED_LEN)
+		if(arg_pmatch[i].rm_eo < MAX_ARG_PARSED_LEN)
+		  {
+		    strl=arg_pmatch[i].rm_eo - arg_pmatch[i].rm_so;
+		    strncpy(tempstr, &line[arg_pmatch[i].rm_so], strl);
+		    tempstr[strl]='\0';
 
-  /*printf("%s, %u\n",ret->arg_regex, a);*/ /*DEBUG*/
+		    switch(i)
+		      {
+		      case 0:
+			printf("Arg: %s\n",tempstr);
+			break;
 
-  /*Read and count the argument list*/
-  for(i=i+1,c=0,a=0,d=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
-    {
-      if((line[i]>='a' && line[i]<='z') || (line[i]>='A' && line[i]<='Z'))
-	{
-	  ret->arg_subargs[a]=line[i];
-	  c++;
-	  d++;
-	}else
-      if(line[i]==',')
-	{
-	  ret->arg_subargs[a]=line[i];
-	  d++;
-	}
-    }
-  ret->arg_subargs[d]='\0';
-  ret->arg_subargs_len=d;
-  ret->n_args=c;
-
-  for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
-    {
-      ret->arg_desc[i]='\0';
-      if(isalpha(line[i]) || (line[i]=='0' || line[i]=='1'))
-	{
-	  ret->arg_desc[a]=line[i];
-	}
-    }
-  ret->arg_desc[i]='\0';
-  ret->arg_desc_len=a;
-
-  for(i=i+1,a=0;(i<strlen(line)) && (line[i]!=':');i++,a++)
-    {
-      if(isalpha(line[i]) || (line[i]=='0' || line[i]=='1'))
-	{
-	  ret->arg_overflow[a]=line[i];
-	}
-    }
-  ret->arg_overflow[a]='\0';
-  ret->arg_overflow_len=a;
+		      case 1: /*Value of the symbol, currently it can hade binary encoding*/
+			strncpy(ret->arg_regex, tempstr, MAX_ARG_PARSED_LEN);
+			ret->arg_regex_len = strl;
 
 
-  quit=0;
-  for(i=i+1,a=0;(i<strlen(line)) && (quit==0);i++)
-    {
-      if(isdigit(line[i]) || line[i]=='+' || line[i]=='-')
-	{
-	  tempstring[a]=line[i];
-	  a++;
-	} else if(line[i]==',' || line[i]==':')
-	{
-	  if(line[i]==':')
-	    {
-	      quit=1;
-	    }
-	  tempstring[a]='\0';
-	  a=0;
-	  if(sscanf(tempstring,"%li",&result)==1)
-	    {
-	      ret->shift = result;
-	      /*Potential problem here*/
-	    } else return 0; /*Make error here*/
+			/*printf("Regex string: %s\n",ret->arg_regex);*/
+
+			break;
+
+		      case 2:/*argument list*/
+			strncpy(ret->arg_subargs, tempstr, MAX_ARG_PARSED_LEN);
+			ret->arg_subargs_len = strl;
+			/*printf("Args string: %s\n",ret->arg_subargs);*/
+			break;
+
+		      case 3:/*opcode*/
+			strncpy(ret->arg_desc, tempstr, MAX_ARG_PARSED_LEN);
+			ret->arg_desc_len = strl;
+			/*printf("Opcode string: %s\n",ret->arg_desc);*/
+			break;
+
+		      case 4:/*Next word*/
+			strncpy(ret->arg_overflow, tempstr, MAX_ARG_PARSED_LEN);
+			ret->arg_overflow_len = strl;
+			/*printf("Next Word string: %s\n",ret->arg_overflow);*/
+			break;
+
+		      case 5:/*Shifts*/
+			/*printf("Shift string: %s\n",tempstr);*/
+			break;
+
+		      case 6:/*Next word coding*/
+			/*printf("Value string: %s\n\n",tempstr);*/
+			success|=1;
+			break;
+
+		      default:
+			fprintf(stderr,"Unkown parantesis #%u found in regex when parsing Arguments.\n",i);
+			success=0;
+			break;
+		      }
+		  }
 	}
     }
 
-
-  /*printf("%s, %u\n",ret->arg_subargs, ret->n_args);*/ /*DEBUG*/
-
-  return 1;
+  return success;
 }
 
 void addSymbol(const symbol symb, symbol_table * sym_table)
@@ -778,8 +737,10 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 {
   uint64_t p_buf;
   unsigned int i, sc, ret_sym;
+  int match_ret;
   ARG_TYPE is;
   assemble_ret ret;
+  char result[MAX_ARG_PARSED_LEN];
 
   ret.is=UNDEFINED;
   ret.opcode=0;
@@ -894,6 +855,21 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 	    }
 
+	  if(is==ISHEX || is==ISNUMBER)
+	    {
+	      /*There could be an encoding rule for a literal*/
+	      /*It's currently defined in arguments list*/
+	      for(sc=0;sc<arg_list->num;sc++)
+		{
+		  printf("ARGLIST[%u]",arg_list->num);
+		  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[i].arg,&arg_list->arg[sc],i);
+		  if(!match_ret)
+		    {
+		      printf("E:[%s]",result);
+		    }
+		}
+	    }
+
 	  if(found_instr->arg[i].is==DEFINED)
 	    {
 	      printf("(0x%lX), ", found_instr->arg[i].value);
@@ -902,7 +878,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      printf(", ");
 	    }
 
-	}/*Loop through argumets hex.*/
+	}/*Loop through arguments hex.*/
 
       /*loop again to see if we got an undef*/
       ret.is=DEFINED;
@@ -925,7 +901,8 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
   return ret;
 }
 
-/*This code is becoming really hard to follow*/
+/*
+//This code is becoming really difficult to follow
 void parse_line_ret_instr_(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
 {
   int match_ret,isdigit_,ishexa_, ismatch_=0, issymbol=0;
@@ -938,7 +915,6 @@ void parse_line_ret_instr_(const instruction * found_instr, const cpu_instr_set 
       printf("%s",found_instr->arg[inner_ctr].arg);
       inner_ctr2=0;
       match_ret=1;
-	/*printf("Argument %u: ",inner_ctr+1);*/
 	while((match_ret!=0) && (inner_ctr2<arg_list->num))
 	  {
 	    isdigit_=1;
@@ -963,12 +939,12 @@ void parse_line_ret_instr_(const instruction * found_instr, const cpu_instr_set 
 	      {
 		if(isdigit_)
 		  {
-		    /*printf("  It's a digit: %s\n",found_instr->arg[inner_ctr].arg);*/
+
 		    match_ret=0;
 		  }
 		else if(ishexa_)
 		  {
-		    /*printf("  It's hexadec: %s\n",found_instr->arg[inner_ctr].arg);*/
+
 		    match_ret=0;
 		  }
 	      }
@@ -995,9 +971,6 @@ void parse_line_ret_instr_(const instruction * found_instr, const cpu_instr_set 
       if(ismatch_==1)
 	{
 	  inner_ctr2--;
-			      /*
-			      printf(" [matched \"%s\" with \"%s\" ret=%u, value=%s]\n",found_instr->arg[inner_ctr].arg,arg_list->arg[inner_ctr2].arg_regex,match_ret, arg_list->arg[inner_ctr2].arg_desc);
-			      */
 	  printf("=%s[+%s], ",arg_list->arg[inner_ctr2].arg_desc,arg_list->arg[inner_ctr2].arg_overflow);
 	}
       if(match_ret!=0)
@@ -1007,3 +980,4 @@ void parse_line_ret_instr_(const instruction * found_instr, const cpu_instr_set 
     }
   printf("\n");
 }
+*/

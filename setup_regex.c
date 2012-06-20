@@ -20,10 +20,10 @@ regmatch_t instr_pmatch[4]; /*increase with ':'*/
 const size_t instr_nmatch;
 
 /*used to parse the .set file, argument part*/
-const char arg_regstr[] = "^[\\ ]*\\([a-zA-Z]\\{1,100\\}\\)[\\ ]*:\\{1\\}[\\ ]*\\([01]\\{1,64\\}\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z]*\\)[\\ ]*:\\{1\\}.*$";
+const char arg_regstr[] = "^[\\ ]*\\([a-zA-Z[:punct:]]\\{1,100\\}\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z,-]*\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z01-]\\{1,64\\}\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z01-]*\\)[\\ ]*:\\{1\\}[\\ ]*\\([0-9+,-]*\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z,-]*\\)[\\ ]*:\\{1\\}.*$";
 regex_t arg_list;
-regmatch_t arg_pmatch[4]; /*increase with ':'*/
-const size_t arg_nmatch;
+regmatch_t arg_pmatch[6+1]; /*increase with ':'*/
+const size_t arg_nmatch=6+1;
 
 /*Return 0 if success, return 1 if error.*/
 int setup_global_regex(void)
@@ -35,7 +35,21 @@ int setup_global_regex(void)
   if(ret!=0)
     {
       regerror(ret, &symbol_list, errbuf, 100);
-      fprintf(stderr,"%s\n",errbuf);
+      fprintf(stderr,"Error in Symbol Regex: %s\n",errbuf);
+    }
+
+  ret = regcomp(&arg_list, arg_regstr, 0);
+  if(ret!=0)
+    {
+      regerror(ret, &arg_list, errbuf, 100);
+      fprintf(stderr,"Error in Argument Regex: %s\n",errbuf);
+    }
+
+  ret = regcomp(&instr_list, instr_regstr, 0);
+  if(ret!=0)
+    {
+      regerror(ret, &instr_list, errbuf, 100);
+      fprintf(stderr,"Error in instruction Regex: %s\n",errbuf);
     }
 
   return 1;
