@@ -331,14 +331,14 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 		  temp[a]=line[i];
 		}
 	      temp[a]='\0';
-	      printf("%s (Use addSymbol())",temp);
+	      printf("%s (Use addSymbol())\n",temp);
 
 	      /*found_macro=1;*/ /*we can use parse arguments further down, and define args for macros somewhere.*/
 	      return_value = PARSE_LINE_RET_MACRO;
 
 	    } else
 	    {
-	      fprintf(stderr,"Unknown macro \"%s\" ",temp);
+	      fprintf(stderr,"Unknown macro \"%s\" \n",temp);
 	      return PARSE_LINE_RET_ERROR; /*macro not defined*/
 	    }
 	}
@@ -758,10 +758,12 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 {
   uint64_t p_buf;
   unsigned int i, sc, ret_sym, size_calc, smallest_size, smallest_index;
+  signed found_one, found_overflow;
   int match_ret;
   ARG_TYPE is;
   assemble_ret ret;
   char result[MAX_ARG_PARSED_LEN];
+  encode_op_ret opret;
 
   hsymb_table=hsymb_table;
 
@@ -860,6 +862,8 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      /*There could be an encoding rule for a literal*/
 	      /*It's currently defined in arguments list*/
 	      size_calc=0;
+	      found_one=0;
+	      found_overflow=0;
 	      smallest_size=MAX_OP_DESC;
 	      for(sc=0;sc<arg_list->num;sc++)
 		{
@@ -868,15 +872,53 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[i].arg,&arg_list->arg[sc],0); /*sub argument 0*/
 		  if(!match_ret)
 		    {
-		      size_calc=arg_list->arg[sc].arg_overflow_len;
-		      if(size_calc<smallest_size)
+		      opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_desc, 0, found_instr->arg[i].value);
+		      if(!opret.error)
 			{
-			  smallest_size=size_calc;
-			  smallest_index=sc;
+			  size_calc=arg_list->arg[sc].arg_overflow_len;
+			  if(size_calc<smallest_size)
+			    {
+			      smallest_size=size_calc;
+			      smallest_index=sc;
+			      found_one=1;
+			    }
+			}
+		      opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_overflow, 0, found_instr->arg[i].value);
+		      if(!opret.error)
+			{
+			  size_calc=arg_list->arg[sc].arg_overflow_len;
+			  if(size_calc<smallest_size)
+			    {
+			      smallest_size=size_calc;
+			      smallest_index=sc;
+			      found_overflow=1;
+			    }
 			}
 		    }
 		}
-	      printf("E:[%s]",arg_list->arg[smallest_index].arg_desc);
+
+	      if(found_one)
+		{
+		  printf("E:[%s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc);
+		  opret = encode_op(arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc, 0, found_instr->arg[i].value);
+		  if(!opret.error)
+		    {
+		      found_instr->arg[i].value=opret.value;
+		      found_instr->arg[i].is=DEFINED;
+		    }
+		} else if(found_overflow)
+		{
+		  printf("E:[%s, %s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc, arg_list->arg[smallest_index].arg_overflow);
+		  opret = encode_op(arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_overflow, 0, found_instr->arg[i].value);
+		  if(!opret.error)
+		    {
+		      found_instr->arg[i].value=opret.value;
+		      found_instr->arg[i].is=DEFINED;
+		    }
+		}else
+		{
+		  printf("-NOENCODE-");
+		}
 	    }
 
 	  if(found_instr->arg[i].is==DEFINED)

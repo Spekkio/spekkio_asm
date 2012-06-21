@@ -19,7 +19,14 @@ typedef struct
   unsigned int arg_shift;
 }unmask;
 
+typedef struct
+{
+  signed error;
+  uint64_t value;
+}encode_op_ret;
+
 unsigned int encode_opcode(const char * op_args, const char * op_desc, const int num, ...);
 void match_maskstring_to_args(const char * op_args, const char * op_desc);
 void get_const_mask_bits(const char * op_desc, unmask * unmask);
 unsigned int encode_opcode_n(const instruction * found_instr, const char * op_args, const char * op_desc);
+encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_arg, const uint64_t value);
