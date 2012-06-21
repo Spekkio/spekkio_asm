@@ -47,10 +47,13 @@ R[a]       :a  :001aaa:::All:
 Ra         :a  :001aaa:::All:
 [n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::All: ; [next word + register]
 [n]        :n  :011110:nnnnnnnnnnnnnnnn::All: ; [next word]
+L(n)       :n  :011111:nnnnnnnnnnnnnnnn::All: ; Force next word
+S(v)       :v  :1vvvvv::+1:All:               ; Force literal value
 n          :n  :011111:nnnnnnnnnnnnnnnn::All: ; next word
-v          :v  :1vvvvv::+1:All:                 ; Literal value
+v          :v  :1vvvvv::+1:All:               ; Literal value
 
--SYMBOLS
+/*Hardsymbols will not be encoded, they will be put straight into the opcode*/
+-HARDSYMBOLS
 A          :000000:All:
 B          :000001:All:
 C          :000010:All:
@@ -59,12 +62,15 @@ Y          :000100:All:
 Z          :000101:All:
 I          :000110:All:
 J          :000111:All:
-POP        :011000:All: ; [SP++]
-PEEK       :011001:All: ; [SP]
-PUSH       :011010:All: ; [--SP]
 SP         :011011:All:
 PC         :011100:All:
 O          :011101:All:
+POP        :011000:All: ; [SP++]
+PEEK       :011001:All: ; [SP]
+PUSH       :011010:All: ; [--SP]
+
+/*These are values that also will go trough ARGUMENTS to detect an encoding rule*/
+-SYMBOLS
 
 
 ; a found variable, can be represented with regexp
