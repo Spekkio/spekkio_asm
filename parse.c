@@ -4,6 +4,7 @@
 #include <string.h>
 #include <regex.h>
 #include <ctype.h>
+#include <inttypes.h>
 #include "parse.h"
 #include "encode.h"
 #include "setup_regex.h"
@@ -76,10 +77,14 @@ int match_argument(char * result, const int max_result_len, const char * match, 
 		{
 		  /*Potential Bug*/
 		  /*Could need some more checking, check if rm_so and rm_eo doesn't point outside string, etc*/
-		  memcpy(tempstring, &match[pmatch[arg_number+1].rm_so], pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so);
-		  tempstring[(pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so)]='\0';
-		  strncpy(result, tempstring, max_result_len);
-		  success=1;
+		  if((pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so)>=0)
+		    {
+		      /*printf("Match[%s] @ %u, %u\n", match, pmatch[arg_number+1].rm_so, pmatch[arg_number+1].rm_eo);*/
+		      memcpy(tempstring, &match[pmatch[arg_number+1].rm_so], pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so);
+		      tempstring[(pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so)]='\0';
+		      strncpy(result, tempstring, max_result_len);
+		      success=1;
+		    }
 		}
 
 	      /*Make all args*/
@@ -116,7 +121,7 @@ int match_argument(char * result, const int max_result_len, const char * match, 
   return 1;
 }
 
-void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table)
+void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table, symbol_table * hsym_table)
 {
   FILE *f;
   char c;
@@ -127,6 +132,8 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
   cpu_instr instr;
   symbol symb;
 
+  hsym_table = hsym_table;
+  
   set->num=0;
 
   f = fopen(filename, "r");
@@ -193,6 +200,11 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 			  printf("Parsing symbols..\n");
 			  type=SYMB;
 			}
+		      if(!strncmp(lineBuffer,"-HARDSYMBOLS",8))
+			{
+			  printf("Parsing hard symbols..\n");
+			  type=HSYMB;
+			}
 
 		      switch(type)
 			{
@@ -214,6 +226,12 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 			  if(parseSYMBLine(lineBuffer,&symb))
 			    {
 			      addSymbol(symb, sym_table);
+			    }
+
+			case HSYMB:
+			  if(parseSYMBLine(lineBuffer,&symb))
+			    {
+			      addSymbol(symb, hsym_table);
 			    }
 			  break;
 
@@ -441,6 +459,7 @@ int parseARGLine(const char * line, argument * ret)
 		      case 2:/*argument list*/
 			strncpy(ret->arg_subargs, tempstr, MAX_ARG_PARSED_LEN);
 			ret->arg_subargs_len = strl;
+			ret->n_args = count_args(ret->arg_subargs, strl);
 			/*printf("Args string: %s\n",ret->arg_subargs);*/
 			break;
 
@@ -628,7 +647,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
   return 1;
 }
 
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table)
 {
   char c;
   char lineBuffer[MAX_CNT_OF_LINE];
@@ -637,6 +656,8 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
   instruction found_instr;
   PARSE_LINE_RET ret;
   assemble_ret as_ret;
+
+  hsymb_table=hsymb_table;
 
   c=' ';
   line_counter=0;
@@ -697,7 +718,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 		      /*
 			parse_arguments();
 		       */
-		      as_ret = assemble(&found_instr, set, arg_list, symb_list);
+		      as_ret = assemble(&found_instr, set, arg_list, symb_list, hsymb_table);
 		      if(as_ret.is==DEFINED)
 		      {
 			printf("..OK, code=0x%lX, size=%u\n", as_ret.opcode, as_ret.size);
@@ -733,14 +754,16 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 /*This functon assemble all the values/opcodes for each instruction */
 /*and save the unknown symbols that doesn't have a value for later.*/
 /*This function can be called, assemble 1st pass*/
-assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
+assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table)
 {
   uint64_t p_buf;
-  unsigned int i, sc, ret_sym;
+  unsigned int i, sc, ret_sym, size_calc, smallest_size, smallest_index;
   int match_ret;
   ARG_TYPE is;
   assemble_ret ret;
   char result[MAX_ARG_PARSED_LEN];
+
+  hsymb_table=hsymb_table;
 
   ret.is=UNDEFINED;
   ret.opcode=0;
@@ -763,47 +786,15 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	  is=ISUNDEFINED;
 	  /*Check if argument is an encoded number, hex or decimal*/
 
-	  
-	  /*This can be a function in smallfunc.c*/
-	  if(!strncmp(found_instr->arg[i].arg, "0x", 2))
-	    {
-	      /*This has potential to be a hex number*/
-	      is=ISHEX;
-	      for(sc=2;(sc<found_instr->arg[i].arg_len) && (is==ISHEX);sc++)
-		{
-		  if(isxdigit(found_instr->arg[i].arg[sc]))
-		    {
-		      /*It is still hex*/
-		      is=ISHEX;
-		    }else
-		    {
-		      /*It is not hex*/
-		      is=ISUNDEFINED;
-		    }
-		}
-	    }
-
-	  /*Test if normal number*/
-	  if(is==ISUNDEFINED)
-	    {
-	      is=ISNUMBER;
-	      for(sc=0;(sc<found_instr->arg[i].arg_len) && (is==ISNUMBER);sc++)
-		{
-		  if(isdigit(found_instr->arg[i].arg[sc]))
-		    {
-		      /*It is still a number*/
-		      is=ISNUMBER;
-		    }else
-		    {
-		      /*It is not a number*/
-		      is=ISUNDEFINED;
-		    }
-		}
-	    }
+	  is=isNumberType(found_instr->arg[i].arg, found_instr->arg[i].arg_len);
 
 	  /*Search the symbol list*/
 	  if(is==ISUNDEFINED)
 	    {
+	      if(!match_symbol(&ret_sym, found_instr->arg[i].arg, hsymb_table, MAX_ARG_PARSED_LEN))
+		{
+		  is=ISHSYMBOL;
+		}
 	      if(!match_symbol(&ret_sym, found_instr->arg[i].arg, symb_list, MAX_ARG_PARSED_LEN))
 		{
 		  is=ISSYMBOL;
@@ -850,24 +841,42 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		}
 	      break;
 
+	    case ISHSYMBOL:
+	      printf("=HARDSYMBOL");
+	      if(hsymb_table->table[ret_sym].is==DEFINED)
+		{
+		  found_instr->arg[i].value = hsymb_table->table[ret_sym].value;
+		  found_instr->arg[i].is=DEFINED;
+		}
+	      break;
+
 	    default:
 	      printf("=UNDEFSYMBOL");
 	      break;
 	    }
 
-	  if(is==ISHEX || is==ISNUMBER)
+	  if(is==ISHEX || is==ISNUMBER || is==ISSYMBOL)
 	    {
 	      /*There could be an encoding rule for a literal*/
 	      /*It's currently defined in arguments list*/
+	      size_calc=0;
+	      smallest_size=MAX_OP_DESC;
 	      for(sc=0;sc<arg_list->num;sc++)
 		{
-		  printf("ARGLIST[%u]",arg_list->num);
-		  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[i].arg,&arg_list->arg[sc],i);
+		  /*arg_list->arg[sc].n_args;*/
+		  /*printf(",ARGLIST[%u,\"%s\"]",sc,arg_list->arg[sc].arg_regex);*/
+		  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[i].arg,&arg_list->arg[sc],0); /*sub argument 0*/
 		  if(!match_ret)
 		    {
-		      printf("E:[%s]",result);
+		      size_calc=arg_list->arg[sc].arg_overflow_len;
+		      if(size_calc<smallest_size)
+			{
+			  smallest_size=size_calc;
+			  smallest_index=sc;
+			}
 		    }
 		}
+	      printf("E:[%s]",arg_list->arg[smallest_index].arg_desc);
 	    }
 
 	  if(found_instr->arg[i].is==DEFINED)

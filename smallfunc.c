@@ -1,4 +1,9 @@
 #include <inttypes.h>
+#include <stdio.h>
+#include <regex.h>
+#include <string.h>
+#include <ctype.h>
+#include "parse.h"
 
 /*
 A place for short simple functions, counting items in strings,
@@ -9,7 +14,7 @@ converting strings to numbers.. etc.
 
 /*
   Example, If you want to check if a string is only
-  make up of 0 and 1 like this "0101010101"
+  made up of "0" and "1" like this "0101010101"
   you call string_contains("0101010101","10",strlen("0101010101"));
  */
 /*return 1 if all match, else zero if fail*/
@@ -58,6 +63,7 @@ unsigned int count_args(const char * op_args, const unsigned int strlen_op_args)
   unsigned int i;
   unsigned int arg_c;
   /*Parse op_args, and count number of args*/
+
   for(i=0,arg_c=0;i<strlen_op_args;i++)
     {
       if(op_args[i]!=',')
@@ -75,4 +81,64 @@ unsigned int count_args(const char * op_args, const unsigned int strlen_op_args)
 	}
     }
   return arg_c;
+}
+
+ARG_TYPE isHex(const char * str, const unsigned int len)
+{
+  ARG_TYPE is;
+  unsigned int sc;
+  if(!strncmp(str, "0x", 2))
+    {
+      /*This has potential to be a hex number*/
+      is=ISHEX;
+      for(sc=2;(sc<len) && (is==ISHEX);sc++)
+	{
+	  if(isxdigit(str[sc]))
+	    {
+	      /*It is still hex*/
+	      is=ISHEX;
+	    }else
+	    {
+	      /*It is not hex*/
+	      is=ISUNDEFINED;
+	    }
+	}
+    } else
+    {
+      is=ISUNDEFINED;
+    }
+  return is;
+}
+
+ARG_TYPE isDigit(const char * str, const unsigned int len)
+{
+  ARG_TYPE is;
+  unsigned int sc;
+  is=ISNUMBER;
+  for(sc=0;(sc<len) && (is==ISNUMBER);sc++)
+    {
+      if(isdigit(str[sc]))
+	{
+	  /*It is still a number*/
+	  is=ISNUMBER;
+	}else
+	{
+	  /*It is not a number*/
+	  is=ISUNDEFINED;
+	}
+    }
+  return is;
+}
+
+ARG_TYPE isNumberType(const char * str, const unsigned int len)
+{
+  ARG_TYPE is;
+  is=isHex(str, len);
+
+  if(is==ISUNDEFINED)
+    {
+      is=isDigit(str, len);
+    }
+
+  return is;
 }

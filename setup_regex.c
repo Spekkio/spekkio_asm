@@ -4,6 +4,7 @@
 #include <string.h>
 #include <regex.h>
 #include <ctype.h>
+#include <inttypes.h>
 #include "parse.h"
 #include "setup_regex.h"
 
@@ -80,8 +81,8 @@ int make_arg_regex(argument * arg)
   const char character[]="%c\\{1\\}[\\ ]*";
   /*const unsigned int strlen_char = strlen(character);*/
   const char e_character[]="\\%c\\{1\\}[\\ ]*";
-  /*const unsigned int strlen_e_char = strlen(character);*/
-  const unsigned int long_regex_len = arg->arg_regex_len*strlen_var;
+  const unsigned int strlen_e_char = strlen(character);
+  const unsigned int long_regex_len = arg->arg_regex_len*(strlen_var+strlen_e_char);
 
   reg_ctr=0;
   success=0;
@@ -108,6 +109,7 @@ int make_arg_regex(argument * arg)
 		  if(arg->arg_subargs[a] == arg->arg_regex[i])
 		    {
 		      reg_ctr+=snprintf(&long_regex[reg_ctr],long_regex_len,variable);
+		      
 		      found=1;
 		    }
 		}
@@ -123,7 +125,8 @@ int make_arg_regex(argument * arg)
 		}
 	    }
 	}
-      reg_ctr+=sprintf(&long_regex[reg_ctr],"$");
+      reg_ctr+=snprintf(&long_regex[reg_ctr],long_regex_len,"$");
+      long_regex[reg_ctr]='\0';
 
       /*Compile the regex and store in arg struct.*/
       if(!regcomp(&arg->reg, long_regex, 0))
@@ -149,6 +152,7 @@ int make_arg_regex(argument * arg)
 int make_all_arg_regex(argument_list * arg)
 {
   unsigned int i;
+
   for(i=0;i<arg->num;i++)
     {
       if(make_arg_regex(&arg->arg[i]))
@@ -164,9 +168,6 @@ void free_all_regex(argument_list * arg)
   unsigned int i;
   for(i=0;i<arg->num;i++)
     {
-      if(make_arg_regex(&arg->arg[i]))
-	{
-	  regfree(&arg->arg[i].reg);
-	}
+      regfree(&arg->arg[i].reg);
     }
 }

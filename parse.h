@@ -1,8 +1,9 @@
-#include <inttypes.h>
+/*#include <inttypes.h>
+  #include <stdio.h>*/
 
 typedef enum is_def {DEFINED, UNDEFINED} is_def;
-typedef enum PARSE_TYPE {INSTR, ARGU, OPT, SYMB} PARSE_TYPE;
-typedef enum ARG_TYPE {ISHEX, ISNUMBER, ISSYMBOL, IS_MATCHED, ISUNDEFINED} ARG_TYPE;
+typedef enum PARSE_TYPE {INSTR, ARGU, OPT, SYMB, HSYMB} PARSE_TYPE;
+typedef enum ARG_TYPE {ISHEX, ISNUMBER, ISSYMBOL, ISHSYMBOL, IS_MATCHED, ISUNDEFINED} ARG_TYPE;
 
 #ifndef MAX_INSTRUCTIONS
 #define MAX_INSTRUCTIONS 100 /*max number of instructions in instruction set*/
@@ -154,8 +155,8 @@ typedef struct
 }assemble_ret;
 
 PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store);
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list);
-void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table);
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table);
+void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table, symbol_table * hsym_table);
 int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr instr, cpu_instr_set * set);
 int parseARGLine(const char * line, argument * ret);
@@ -165,7 +166,7 @@ void addSymbol(const symbol symb, symbol_table * sym_table);
 
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number);
 
-assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list);
+assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table);
 
 int parseAssignSymbolValue(const char * tempstr, const unsigned int strl,  symbol * symb);
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl);
