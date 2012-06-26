@@ -9,6 +9,7 @@
 #include "encode.h"
 #include "setup_regex.h"
 #include "smallfunc.h"
+#include "assemble.h"
 
 #ifndef MAX_LONG_REGEX
 #define MAX_LONG_REGEX 1000
@@ -421,7 +422,7 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 int parseARGLine(const char * line, argument * ret)
 {
   unsigned int i,strl;
-  char tempstr[MAX_ARG_PARSED_LEN];
+  char tempstr[MAX_ARG_PARSED_LEN]; /*BUG, check this*/
   signed success;
 
   success=0;
@@ -448,7 +449,7 @@ int parseARGLine(const char * line, argument * ret)
 			break;
 
 		      case 1: /*Value of the symbol, currently it can hade binary encoding*/
-			strncpy(ret->arg_regex, tempstr, MAX_ARG_PARSED_LEN);
+			strncpy(ret->arg_regex, tempstr, MAX_NAME_LEN);
 			ret->arg_regex_len = strl;
 
 
@@ -651,7 +652,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 {
   char c;
   char lineBuffer[MAX_CNT_OF_LINE];
-  unsigned int line_counter;
+  unsigned int line_counter, i;
   unsigned int real_line_counter;
   instruction found_instr;
   PARSE_LINE_RET ret;
@@ -718,10 +719,16 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 		      /*
 			parse_arguments();
 		       */
+	      	      found_instr.is=ISINSTRUCTION;
 		      as_ret = assemble(&found_instr, set, arg_list, symb_list, hsymb_table);
 		      if(as_ret.is==DEFINED)
 		      {
-			printf("..OK, code=0x%lX, size=%u\n", as_ret.opcode, as_ret.size);
+			printf("..OK, ");
+			for(i=0;i<as_ret.num;i++)
+			  {
+			    printf("code=0x%lX, size=%u, ", as_ret.opcode[i], as_ret.size[i]);
+			  }
+			printf("\n");
 		      } else printf("\n");
 
 		      break;
@@ -743,292 +750,3 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 
   return 1;
 }
-
-/*This function gets all the strings of one instruction*/
-/*parsed into different variables and pointers*/
-/*String of the instruction = set->instr[found_instr->instr_index].instr_name*/
-/*String of each argument[x] = found_instr->arg[x].arg*/
-/*Number of arguments that was found = found_instr->n_args*/
-/*Number of arguments instruction should have = set->instr[found_instr->instr_index].n_args*/
-
-/*This functon assemble all the values/opcodes for each instruction */
-/*and save the unknown symbols that doesn't have a value for later.*/
-/*This function can be called, assemble 1st pass*/
-assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table)
-{
-  uint64_t p_buf;
-  unsigned int i, sc, ret_sym, size_calc, smallest_size, smallest_index;
-  signed found_one, found_overflow;
-  int match_ret;
-  ARG_TYPE is;
-  assemble_ret ret;
-  char result[MAX_ARG_PARSED_LEN];
-  encode_op_ret opret;
-
-  hsymb_table=hsymb_table;
-
-  ret.is=UNDEFINED;
-  ret.opcode=0;
-  ret.size=0;
-
-  set=set;
-  arg_list=arg_list;
-  symb_list=symb_list;
-  /*These two must be the same, I think they are checked before*/
-  /*I'm starting to loose track...*/
-  if(found_instr->n_args == set->instr[found_instr->instr_index].n_args)
-    {
-      printf("%s ",set->instr[found_instr->instr_index].instr_name);
-
-      /*loop through the arguments*/
-      /*to be able to parse subarguments, this can be made into a function*/
-      /*that can be used recursive.*/
-      for(i=0;i<found_instr->n_args;i++)
-	{
-	  is=ISUNDEFINED;
-	  /*Check if argument is an encoded number, hex or decimal*/
-
-	  is=isNumberType(found_instr->arg[i].arg, found_instr->arg[i].arg_len);
-
-	  /*Search the symbol list*/
-	  if(is==ISUNDEFINED)
-	    {
-	      if(!match_symbol(&ret_sym, found_instr->arg[i].arg, hsymb_table, MAX_ARG_PARSED_LEN))
-		{
-		  is=ISHSYMBOL;
-		}
-	      if(!match_symbol(&ret_sym, found_instr->arg[i].arg, symb_list, MAX_ARG_PARSED_LEN))
-		{
-		  is=ISSYMBOL;
-		}
-	    }
-
-	  printf("%s",found_instr->arg[i].arg);
-	  found_instr->arg[i].is=UNDEFINED;
-	  p_buf = 0;
-	  switch(is)
-	    {
-	    case ISHEX:
-	      printf("=HEX");
-
-	      if(sscanf(found_instr->arg[i].arg,"0x%lX",&p_buf)==1)
-		{
-		  found_instr->arg[i].value = p_buf;
-		  found_instr->arg[i].is=DEFINED;
-		}
-	      else if(sscanf(found_instr->arg[i].arg,"0x%lx",&p_buf)==1)
-		{
-		  found_instr->arg[i].value = p_buf;
-		  found_instr->arg[i].is=DEFINED;
-		}
-	      break;
-
-	    case ISNUMBER:
-	      printf("=NUMBER");
-
-	      if(sscanf(found_instr->arg[i].arg,"%lu",&p_buf)==1)
-		{
-		  found_instr->arg[i].value = p_buf;
-		  found_instr->arg[i].is=DEFINED;
-		}
-
-	      break;
-
-	    case ISSYMBOL:
-	      printf("=SYMBOL");
-	      if(symb_list->table[ret_sym].is==DEFINED)
-		{
-		  found_instr->arg[i].value = symb_list->table[ret_sym].value;
-		  found_instr->arg[i].is=DEFINED;
-		}
-	      break;
-
-	    case ISHSYMBOL:
-	      printf("=HARDSYMBOL");
-	      if(hsymb_table->table[ret_sym].is==DEFINED)
-		{
-		  found_instr->arg[i].value = hsymb_table->table[ret_sym].value;
-		  found_instr->arg[i].is=DEFINED;
-		}
-	      break;
-
-	    default:
-	      printf("=UNDEFSYMBOL");
-	      break;
-	    }
-
-	  if(is==ISHEX || is==ISNUMBER || is==ISSYMBOL)
-	    {
-	      /*There could be an encoding rule for a literal*/
-	      /*It's currently defined in arguments list*/
-	      size_calc=0;
-	      found_one=0;
-	      found_overflow=0;
-	      smallest_size=MAX_OP_DESC;
-	      for(sc=0;sc<arg_list->num;sc++)
-		{
-		  /*arg_list->arg[sc].n_args;*/
-		  /*printf(",ARGLIST[%u,\"%s\"]",sc,arg_list->arg[sc].arg_regex);*/
-		  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[i].arg,&arg_list->arg[sc],0); /*sub argument 0*/
-		  if(!match_ret)
-		    {
-		      opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_desc, 0, found_instr->arg[i].value);
-		      if(!opret.error)
-			{
-			  size_calc=arg_list->arg[sc].arg_overflow_len;
-			  if(size_calc<smallest_size)
-			    {
-			      smallest_size=size_calc;
-			      smallest_index=sc;
-			      found_one=1;
-			    }
-			}
-		      opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_overflow, 0, found_instr->arg[i].value);
-		      if(!opret.error)
-			{
-			  size_calc=arg_list->arg[sc].arg_overflow_len;
-			  if(size_calc<smallest_size)
-			    {
-			      smallest_size=size_calc;
-			      smallest_index=sc;
-			      found_overflow=1;
-			    }
-			}
-		    }
-		}
-
-	      if(found_one)
-		{
-		  printf("E:[%s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc);
-		  opret = encode_op(arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc, 0, found_instr->arg[i].value);
-		  if(!opret.error)
-		    {
-		      found_instr->arg[i].value=opret.value;
-		      found_instr->arg[i].is=DEFINED;
-		    }
-		} else if(found_overflow)
-		{
-		  printf("E:[%s, %s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc, arg_list->arg[smallest_index].arg_overflow);
-		  opret = encode_op(arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_overflow, 0, found_instr->arg[i].value);
-		  if(!opret.error)
-		    {
-		      found_instr->arg[i].value=opret.value;
-		      found_instr->arg[i].is=DEFINED;
-		    }
-		}else
-		{
-		  printf("-NOENCODE-");
-		}
-	    }
-
-	  if(found_instr->arg[i].is==DEFINED)
-	    {
-	      printf("(0x%lX), ", found_instr->arg[i].value);
-	    }else
-	    {
-	      printf(", ");
-	    }
-
-	}/*Loop through arguments hex.*/
-
-      /*loop again to see if we got an undef*/
-      ret.is=DEFINED;
-      for(i=0;i<found_instr->n_args;i++)
-	{
-	  if(found_instr->arg[i].is==UNDEFINED)
-	    {
-	      ret.is=UNDEFINED;
-	    }
-	}
-
-      /*If it's defined*/
-      if(ret.is==DEFINED)
-	{
-	  /*put in the argument values and get the opcode.*/
-	  ret.opcode = encode_opcode_n(found_instr, set->instr[found_instr->instr_index].args, set->instr[found_instr->instr_index].op_desc);
-	}
-    }
-
-  return ret;
-}
-
-/*
-//This code is becoming really difficult to follow
-void parse_line_ret_instr_(const instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list)
-{
-  int match_ret,isdigit_,ishexa_, ismatch_=0, issymbol=0;
-  unsigned int inner_ctr, inner_ctr2, i, ret_index;
-  char result[MAX_ARG_PARSED_LEN];
-
-  printf("%s ",set->instr[found_instr->instr_index].instr_name);
-  for(inner_ctr=0;inner_ctr<found_instr->n_args;inner_ctr++)
-    {
-      printf("%s",found_instr->arg[inner_ctr].arg);
-      inner_ctr2=0;
-      match_ret=1;
-	while((match_ret!=0) && (inner_ctr2<arg_list->num))
-	  {
-	    isdigit_=1;
-	    ismatch_=0;
-	    if(!strncmp(found_instr->arg[inner_ctr].arg, "0x", 2))
-	      {
-		ishexa_=1;
-	      }else ishexa_=0;
-	    for(i=0;i<found_instr->arg[inner_ctr].arg_len;i++)
-	      {
-		if(!isdigit(found_instr->arg[inner_ctr].arg[0]))
-		  {
-		    isdigit_=0;
-		  }
-		if((isxdigit(found_instr->arg[inner_ctr].arg[0]))==0)
-		{
-		  ishexa_=0;
-		}
-	      }
-
-	    if(isdigit_ || ishexa_)
-	      {
-		if(isdigit_)
-		  {
-
-		    match_ret=0;
-		  }
-		else if(ishexa_)
-		  {
-
-		    match_ret=0;
-		  }
-	      }
-	    else
-	      {
-		if(match_symbol(&ret_index, found_instr->arg[inner_ctr].arg, symb_list, found_instr->arg[inner_ctr].arg_len))
-		  {
-		    printf(", %s",symb_list->table[ret_index].string);
-		    issymbol|=1;
-		    ismatch_=0;
-		  }else
-		  {
-		    result[0]='\0';
-		    match_ret=0;
-		    match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[inner_ctr].arg,&arg_list->arg[inner_ctr2],inner_ctr);
-		    if(!match_ret)
-		      {
-			ismatch_|=1;
-		      }
-		  }
-	      }
-	    inner_ctr2++;
-	  }
-      if(ismatch_==1)
-	{
-	  inner_ctr2--;
-	  printf("=%s[+%s], ",arg_list->arg[inner_ctr2].arg_desc,arg_list->arg[inner_ctr2].arg_overflow);
-	}
-      if(match_ret!=0)
-	{
-	  printf(" match: %s = %s, ",result,arg_list->arg[inner_ctr2].arg_desc);
-	}
-    }
-  printf("\n");
-}
-*/

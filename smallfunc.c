@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "parse.h"
+#include "smallfunc.h"
 
 /*
 A place for short simple functions, counting items in strings,

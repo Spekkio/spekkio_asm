@@ -41,6 +41,9 @@ typedef enum ARG_TYPE {ISHEX, ISNUMBER, ISSYMBOL, ISHSYMBOL, IS_MATCHED, ISUNDEF
 #ifndef MAX_MATCH_RANGES
 #define MAX_MATCH_RANGES 10
 #endif
+#ifndef MAX_OVERFLOWS
+#define MAX_OVERFLOWS 10
+#endif
 
 /*This is the maximum length of a line in the source file.*/
 #ifndef MAX_CNT_OF_LINE /*case_line in parseLine()*/
@@ -139,20 +142,16 @@ typedef struct
   is_def is;
 }small_argument;
 
+typedef enum ARG_INSTR{ISARGUMENT, ISINSTRUCTION}ARG_INSTR;
+
 /*Used by the assembler to match a instruction in the instr_set*/
 typedef struct
 {
   unsigned int instr_index; /*index number of the instruction in cpu_instr_set*/
   unsigned int n_args;
+  ARG_INSTR is;
   small_argument arg[MAX_ARGS]; /*A list of the found arguments, they have to be matched later*/
 }instruction;
-
-typedef struct
-{
-  uint64_t opcode;
-  unsigned int size; /*Resulting size of the opcode in bits*/
-  is_def is; /*Was there an undefined value? Or was the assembling complete.*/
-}assemble_ret;
 
 PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store);
 int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table);
@@ -165,8 +164,6 @@ int parseSYMBLine(const char * line, symbol * symb);
 void addSymbol(const symbol symb, symbol_table * sym_table);
 
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number);
-
-assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table);
 
 int parseAssignSymbolValue(const char * tempstr, const unsigned int strl,  symbol * symb);
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl);
