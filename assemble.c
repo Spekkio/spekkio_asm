@@ -127,6 +127,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	  break;
 	default: break;
 	}
+     
 
       /*loop through the arguments*/
       /*to be able to parse subarguments, this can be made into a function*/
@@ -138,13 +139,13 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	  /*Returns the type and puts a index pointer in match_found*/
 	  is=detectType(&match_found, found_instr->arg[i], arg_list, symb_list, hsymb_table);
 
-	  printf("%s",found_instr->arg[i].arg);
+	  printf("%s, ",found_instr->arg[i].arg);
 	  found_instr->arg[i].is=UNDEFINED;
 	  p_buf = 0;
 	  switch(is)
 	    {
 	    case ISHEX:
-	      printf("=HEX");
+	      /*printf("=HEX");*/
 
 	      if(sscanf(found_instr->arg[i].arg,"0x%lX",&p_buf)==1)
 		{
@@ -159,7 +160,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    case ISNUMBER:
-	      printf("=NUMBER");
+	      /*printf("=NUMBER");*/
 
 	      if(sscanf(found_instr->arg[i].arg,"%lu",&p_buf)==1)
 		{
@@ -170,7 +171,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    case ISSYMBOL:
-	      printf("=SYMBOL");
+	      /*printf("=SYMBOL");*/
 	      if(symb_list->table[match_found].is==DEFINED)
 		{
 		  found_instr->arg[i].value = symb_list->table[match_found].value;
@@ -179,7 +180,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    case ISHSYMBOL:
-	      printf("=HARDSYMBOL");
+	      /*printf("=HARDSYMBOL");*/
 	      if(hsymb_table->table[match_found].is==DEFINED)
 		{
 		  found_instr->arg[i].value = hsymb_table->table[match_found].value;
@@ -190,7 +191,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	    case IS_MATCHED:
 	      if(found_instr->is==ISINSTRUCTION)
 		{
-		  printf("=MATCHED_ARG->");
+		  /*printf("=MATCHED_ARG->");*/
 		  rec_instr.instr_index=match_found;
 		  rec_instr.n_args=arg_list->arg[match_found].n_args; /*match_found may be uninit...*/
 		  rec_instr.is=ISARGUMENT;
@@ -222,7 +223,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    default:
-	      printf("=UNDEFSYMBOL");
+	      /*printf("=UNDEFSYMBOL");*/
 	      break;
 	    }
 
@@ -268,7 +269,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 
 	      if(found_one)
 		{
-		  printf("E:[%s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc);
+		  /*printf("E:[%s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc);*/
 		  opret = encode_op(arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc, 0, found_instr->arg[i].value);
 		  if(!opret.error)
 		    {
@@ -277,7 +278,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		    }
 		} else if(found_overflow)
 		{
-		  printf("E:[%s, %s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc, arg_list->arg[smallest_index].arg_overflow);
+		  /*printf("E:[%s, %s, %s]",arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_desc, arg_list->arg[smallest_index].arg_overflow);*/
 		  opret = encode_op(arg_list->arg[smallest_index].arg_subargs, arg_list->arg[smallest_index].arg_overflow, 0, found_instr->arg[i].value);
 		  if(!opret.error)
 		    {
@@ -293,13 +294,13 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		    }
 		}else
 		{
-		  printf("-NOENCODE-");
+		  /*printf("-NOENCODE-");*/
 		}
 	    }
 
 	  if(found_instr->arg[i].is==DEFINED)
 	    {
-	      printf("(0x%lX), ", found_instr->arg[i].value);
+	      /*printf("(0x%lX), ", found_instr->arg[i].value);*/
 	      if(found_instr->is==ISARGUMENT)
 		{
 		  ret.size[ret.num] = bitSize(found_instr->arg[i].value);
@@ -307,7 +308,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		}
 	    }else
 	    {
-	      printf(", ");
+	      /*printf(", ");*/
 	    }
 
 	}/*Loop through arguments hex.*/
