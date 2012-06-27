@@ -7,6 +7,7 @@ of the instruction set from the Microchip MCU Datasheets.
 Currently I have added the DCPU-16 instruction set from the game 0x10c.
 
 This is the output from the assembler as it looks now with DCPU specification loaded.
+As you can see it does not compute the value of the pointers yet.
 
 SET A, 0x30, ..OK, code=0x30, size=16, code=0x7C01, size=16,
 SET [0x1000], [n] 0x1000, 0x20, ..OK, code=0x20, size=16, code=0x7DE1, size=16,
