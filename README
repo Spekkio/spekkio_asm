@@ -6,5 +6,28 @@ of the instruction set from the Microchip MCU Datasheets.
 
 Currently I have added the DCPU-16 instruction set from the game 0x10c.
 
-Currently, the assembler cannot do anything. It cannot parse asm files.
-This is a work in progress.
+This is the output from the assembler as it looks now with DCPU specification loaded.
+
+SET A, 0x30, ..OK, code=0x30, size=16, code=0x7C01, size=16,
+SET [0x1000], [n] 0x1000, 0x20, ..OK, code=0x20, size=16, code=0x7DE1, size=16,
+SUB A, [0x1000], [n] 0x1000, ..OK, code=0x7803, size=16,
+IFN A, 0x10, ..OK, code=0xC00D, size=16,
+SET PC, crash, n crash,
+SET I, 10, ..OK, code=0xA861, size=16,
+SET A, 0x2000, ..OK, code=0x2000, size=16, code=0x7C01, size=16,
+found tag: loop
+
+SET [0x2000+I], [n+a] 0x2000, I, [A], [n] A, ..OK, code=0x7961, size=16,
+SUB I, 1, ..OK, code=0x8463, size=16,
+IFN I, 0, ..OK, code=0x806D, size=16,
+SET PC, loop, n loop,
+SET X, 0x4, ..OK, code=0x9031, size=16,
+JSR testsub, n testsub,
+SET PC, crash, n crash,
+found tag: testsub
+
+SHL X, 4, ..OK, code=0x9037, size=16,
+SET PC, POP, ..OK, code=0x61C1, size=16,
+found tag: crash
+
+SET PC, crash, n crash,
