@@ -7,18 +7,20 @@ of the instruction set from the Microchip MCU Datasheets.
 Currently I have added the DCPU-16 instruction set from the game 0x10c.
 
 This is the output from the assembler as it looks now with DCPU specification loaded.
-As you can see it does not compute the value of the pointers yet.
+As you can see it does not compute the value of the pointers yet, and there are some
+double matches, for instance [X] type argument also matches to [0x1000] type argument.
+
 
 SET A, 0x30, ..OK, code=0x30, size=16, code=0x7C01, size=16,
-SET [0x1000], [n] 0x1000, 0x20, ..OK, code=0x20, size=16, code=0x7DE1, size=16,
-SUB A, [0x1000], [n] 0x1000, ..OK, code=0x7803, size=16,
+SET [0x1000], [a] 0x1000, SUBARG:0 code=0x1000, size=13, 0x20, ..OK, code=0x20, size=16, code=0x7C81, size=16, (Double match error)
+SUB A, [0x1000], [a] 0x1000, SUBARG:0 code=0x1000, size=13, ..OK, code=0x2003, size=16, (Double match error)
 IFN A, 0x10, ..OK, code=0xC00D, size=16,
 SET PC, crash, n crash,
 SET I, 10, ..OK, code=0xA861, size=16,
 SET A, 0x2000, ..OK, code=0x2000, size=16, code=0x7C01, size=16,
 found tag: loop
 
-SET [0x2000+I], [n+a] 0x2000, I, [A], [n] A, ..OK, code=0x7961, size=16,
+SET [0x2000+I], [n+a] 0x2000, I, SUBARG:0 code=0x2000, size=14, SUBARG:1 code=0x6, size=3, [A], [a] A, SUBARG:0 code=0x0, size=0, ..OK, code=0x2161, size=16,  (Double match error, just happens to match correctly)
 SUB I, 1, ..OK, code=0x8463, size=16,
 IFN I, 0, ..OK, code=0x806D, size=16,
 SET PC, loop, n loop,
