@@ -7,3 +7,5 @@ ARG_TYPE isHex(const char * str, const unsigned int len);
 ARG_TYPE isDigit(const char * str, const unsigned int len);
 ARG_TYPE isNumberType(const char * str, const unsigned int len);
 
+uint64_t bitSize(uint64_t a);
+uint64_t nWords(uint64_t bitsize, uint64_t wordsize);

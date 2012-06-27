@@ -7,6 +7,52 @@
 #include "smallfunc.h"
 #include "assemble.h"
 
+
+/*Finds out what kind of symbol we have, HEX, NUMBER, SYMBOL, HSYMBOL or matched argument*/
+/*Returns the type and puts a index pointer in match_found*/
+ARG_TYPE detectType(unsigned int * match_found, const small_argument arg, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table)
+{
+  char result[MAX_ARG_PARSED_LEN];
+  int match_ret;
+  unsigned int sc;
+  ARG_TYPE is;
+  
+  is=ISUNDEFINED;
+  /*Check if argument is an encoded number, hex or decimal*/
+  /*found_instr->arg[i].arg/arg_len*/
+
+  is=isNumberType(arg.arg, arg.arg_len);
+
+  /*Search the symbol list*/
+  if(is==ISUNDEFINED)
+    {
+      if(!match_symbol(match_found, arg.arg, hsymb_table, MAX_ARG_PARSED_LEN))
+	{
+	  is=ISHSYMBOL;
+	}
+      if(!match_symbol(match_found, arg.arg, symb_list, MAX_ARG_PARSED_LEN))
+	{
+	  is=ISSYMBOL;
+	}
+    }
+
+  if(is==ISUNDEFINED)
+    {
+      for(sc=0;(sc<arg_list->num) && (is==ISUNDEFINED);sc++)
+	{
+	  /*arg_list->arg[sc].n_args;*/
+	  /*printf(",ARGLIST[%u,\"%s\"]",sc,arg_list->arg[sc].arg_regex);*/
+	  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,arg.arg,&arg_list->arg[sc],0); /*sub argument 0*/
+	  if(!match_ret)
+	    {
+	      is=IS_MATCHED;
+	      *match_found=sc;
+	    }
+	}
+    }
+  return is;
+}
+
 /*This function gets all the strings of one instruction*/
 /*parsed into different variables and pointers*/
 /*String of the instruction = set->instr[found_instr->instr_index].instr_name*/
@@ -20,7 +66,7 @@
 assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table)
 {
   uint64_t p_buf;
-  unsigned int i, sc, ret_sym, size_calc, smallest_size, smallest_index, match_found;
+  unsigned int i, sc, size_calc, smallest_size, smallest_index, match_found;
   signed found_one, found_overflow;
   int match_ret;
   ARG_TYPE is;
@@ -32,9 +78,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 
   hsymb_table=hsymb_table;
 
-  ret_sym=0;
   match_found=0;
-
 
   cont=0;
 
@@ -89,38 +133,10 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
       /*that can be used recursive.*/
       for(i=0;i<found_instr->n_args;i++)
 	{
-	  is=ISUNDEFINED;
-	  /*Check if argument is an encoded number, hex or decimal*/
 
-	  is=isNumberType(found_instr->arg[i].arg, found_instr->arg[i].arg_len);
-
-	  /*Search the symbol list*/
-	  if(is==ISUNDEFINED)
-	    {
-	      if(!match_symbol(&ret_sym, found_instr->arg[i].arg, hsymb_table, MAX_ARG_PARSED_LEN))
-		{
-		  is=ISHSYMBOL;
-		}
-	      if(!match_symbol(&ret_sym, found_instr->arg[i].arg, symb_list, MAX_ARG_PARSED_LEN))
-		{
-		  is=ISSYMBOL;
-		}
-	    }
-
-	  if(is==ISUNDEFINED)
-	    {
-	      for(sc=0;(sc<arg_list->num) && (is==ISUNDEFINED);sc++)
-		{
-		  /*arg_list->arg[sc].n_args;*/
-		  /*printf(",ARGLIST[%u,\"%s\"]",sc,arg_list->arg[sc].arg_regex);*/
-		  match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[i].arg,&arg_list->arg[sc],0); /*sub argument 0*/
-		  if(!match_ret)
-		    {
-		      is=IS_MATCHED;
-		      match_found=sc;
-		    }
-		}
-	    }
+	  /*Finds out what kind of symbol we have, HEX, NUMBER, SYMBOL, HSYMBOL or matched argument*/
+	  /*Returns the type and puts a index pointer in match_found*/
+	  is=detectType(&match_found, found_instr->arg[i], arg_list, symb_list, hsymb_table);
 
 	  printf("%s",found_instr->arg[i].arg);
 	  found_instr->arg[i].is=UNDEFINED;
@@ -154,19 +170,19 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    case ISSYMBOL:
-	      printf("=SYMBOL");/*ret_sym may be uninit...*/
-	      if(symb_list->table[ret_sym].is==DEFINED)
+	      printf("=SYMBOL");
+	      if(symb_list->table[match_found].is==DEFINED)
 		{
-		  found_instr->arg[i].value = symb_list->table[ret_sym].value;
+		  found_instr->arg[i].value = symb_list->table[match_found].value;
 		  found_instr->arg[i].is=DEFINED;
 		}
 	      break;
 
 	    case ISHSYMBOL:
 	      printf("=HARDSYMBOL");
-	      if(hsymb_table->table[ret_sym].is==DEFINED)
+	      if(hsymb_table->table[match_found].is==DEFINED)
 		{
-		  found_instr->arg[i].value = hsymb_table->table[ret_sym].value;
+		  found_instr->arg[i].value = hsymb_table->table[match_found].value;
 		  found_instr->arg[i].is=DEFINED;
 		}
 	      break;
@@ -190,7 +206,18 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 			}
 		    }
 		  rec=assemble(&rec_instr, set, arg_list, symb_list, hsymb_table);
-		  printf("RETURNED: %u, ",rec.num);
+		  /*printf("RETURNED: %u, ",rec.num);*/
+		      if(rec.is==DEFINED)
+		      {/*
+			printf("..POK, ");
+			for(sc=0;sc<rec.num;sc++)
+			  {
+			    printf("code=0x%lX, size=%u, ", rec.opcode[sc], rec.size[sc]);
+			    }*/
+			found_instr->arg[i].value = rec.opcode[rec.num-1];
+			found_instr->arg[i].is=DEFINED;
+		      }
+
 		}
 	      break;
 
@@ -199,7 +226,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 	    }
 
-	  if(is==ISHEX || is==ISNUMBER || is==ISSYMBOL)
+	  if((is==ISHEX || is==ISNUMBER || is==ISSYMBOL) && (found_instr->is==ISINSTRUCTION))
 	    {
 	      /*There could be an encoding rule for a literal*/
 	      /*It's currently defined in arguments list*/
@@ -273,6 +300,11 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	  if(found_instr->arg[i].is==DEFINED)
 	    {
 	      printf("(0x%lX), ", found_instr->arg[i].value);
+	      if(found_instr->is==ISARGUMENT)
+		{
+		  ret.size[ret.num] = bitSize(found_instr->arg[i].value);
+		  ret.opcode[ret.num++] = found_instr->arg[i].value;
+		}
 	    }else
 	    {
 	      printf(", ");
@@ -294,7 +326,20 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
       if(ret.is==DEFINED)
 	{
 	  /*put in the argument values and get the opcode.*/
-	  ret.opcode[ret.num++] = encode_opcode_n(found_instr, set->instr[found_instr->instr_index].args, set->instr[found_instr->instr_index].op_desc);
+	  switch(found_instr->is)
+	    {
+	    case ISINSTRUCTION:
+	      ret.size[ret.num] = set->instr[found_instr->instr_index].op_len;
+	      ret.opcode[ret.num++] = encode_opcode_n(found_instr, set->instr[found_instr->instr_index].args, set->instr[found_instr->instr_index].op_desc);
+	      
+	      break;
+	    case ISARGUMENT:
+	      ret.size[ret.num] = arg_list->arg[found_instr->instr_index].arg_desc_len;
+	      ret.opcode[ret.num++] = encode_opcode_n(found_instr, arg_list->arg[found_instr->instr_index].arg_subargs, arg_list->arg[found_instr->instr_index].arg_desc);
+	      break;
+	    default:
+	      break;
+	    }
 	}
     }
 

@@ -7,3 +7,6 @@ typedef struct
 }assemble_ret;
 
 assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table);
+
+ARG_TYPE detectType(unsigned int * match_found, const small_argument arg, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table);
+

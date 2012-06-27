@@ -143,3 +143,26 @@ ARG_TYPE isNumberType(const char * str, const unsigned int len)
 
   return is;
 }
+
+/*returns number of 'word_size' the number 'a' fits in*/
+uint64_t bitSize(uint64_t a)
+{
+  const uint64_t size = sizeof(uint64_t)*8;
+  uint64_t i;
+  
+  for(i=0;(i<size) && ((a & (((uint64_t)1)<<((size-1)-i)))==0) ;i++);
+  
+  i=size-i;
+
+  return i;
+}
+
+uint64_t nWords(uint64_t bitsize, uint64_t wordsize)
+{
+  if((bitsize % wordsize) == 0)
+    {
+      return (bitsize/wordsize);
+    }
+
+  return (bitsize / wordsize) * wordsize + wordsize;
+}
