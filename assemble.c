@@ -191,6 +191,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	    case IS_MATCHED:
 	      if(found_instr->is==ISINSTRUCTION)
 		{
+		  /*Denna kod skall vara i detectType(), mojligtvis dela upp detectType, detectSymbol.*/
 		  /*printf("=MATCHED_ARG->");*/
 		  rec_instr.instr_index=match_found;
 		  rec_instr.n_args=arg_list->arg[match_found].n_args; /*match_found may be uninit...*/
@@ -199,7 +200,13 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		    {
 		      match_ret=match_argument(result,MAX_ARG_PARSED_LEN,found_instr->arg[i].arg,&arg_list->arg[match_found],sc);
 		      if(!match_ret)
-			{
+			{/*
+			  opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_desc, 0, found_instr->arg[i].value);
+			  if(!opret.error)
+			    {
+			      printf("Too big");
+			    }
+			 */
 			  rec_instr.arg[sc].arg_len = strlen(result);
 			  strncpy(rec_instr.arg[sc].arg, result, MAX_ARG_PARSED_LEN);
 			  rec_instr.arg[sc].value = 0;
@@ -209,12 +216,13 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		  rec=assemble(&rec_instr, set, arg_list, symb_list, hsymb_table);
 		  /*printf("RETURNED: %u, ",rec.num);*/
 		      if(rec.is==DEFINED)
-		      {/*
-			printf("..POK, ");
-			for(sc=0;sc<rec.num;sc++)
-			  {
-			    printf("code=0x%lX, size=%u, ", rec.opcode[sc], rec.size[sc]);
-			    }*/
+		      {
+			if(rec.num>1)
+			  for(sc=0;sc<(rec.num-1);sc++)
+			    {
+			      printf("SUBARG:%u code=0x%lX, size=%u, ", sc, rec.opcode[sc], rec.size[sc]);
+			    }
+			opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_desc, 0, found_instr->arg[i].value);
 			found_instr->arg[i].value = rec.opcode[rec.num-1];
 			found_instr->arg[i].is=DEFINED;
 		      }
