@@ -34,13 +34,6 @@ IFN:a,b:bbbbbbaaaaaa1101:   ; - performs next instruction only if a!=b
 IFG:a,b:bbbbbbaaaaaa1110:   ; - performs next instruction only if a>b
 IFB:a,b:bbbbbbaaaaaa1111:   ; - performs next instruction only if (a&b)!=0
 
-;INT:n :nnnnnn0000100000:   ; - Sends an interrupt with number 'n'
-;CLI:  :xxxxxx0000110000:   ; - Clears the interrupt flag
-;STI:  :xxxxxx0001000000:   ; - Sets the interrupt flag
-;LCR:a :aaaaaa0001010000:   ; - Loads the CR into 'a'
-;SCR:a :aaaaaa0001100000:   ; - Stores the value of 'a' into CR
-;An argument can contain the values 0-9 and x.
-;
 ;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Extra Regex:Used for what instr:
 -ARGUMENTS
 [a]        :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
@@ -72,31 +65,3 @@ PUSH       :11010:All: ; [--SP]
 
 /*These are values that also will go trough ARGUMENTS to detect an encoding rule*/
 -SYMBOLS
-
-
-; a found variable, can be represented with regexp
-; [\\ ]*[0-9x]\\{1,1000\\}[\\ ]*
-
-; any other character, here plus is the character.
-; +\\{1\\}
-
-; If a number is defined, it's either any of the two
-; arguments in the bottom. probably it's v if the value is >0x20
-; use the const_mask value to know.
-
-; Some of these, like the register names are just symbols
-; with values. So they can get put into the symbols struct.
-
-;Values: (6 bits)
-;    0x00-0x07: register (A, B, C, X, Y, Z, I or J, in that order)
-;    0x08-0x0f: [register]
-;    0x10-0x17: [next word + register]
-;         0x18: POP / [SP++]
-;         0x19: PEEK / [SP]
-;         0x1a: PUSH / [--SP]
-;         0x1b: SP
-;         0x1c: PC
-;         0x1d: O
-;         0x1e: [next word]
-;         0x1f: next word (literal)
-;    0x20-0x3f: literal value 0x00-0x1f (literal)
