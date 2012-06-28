@@ -126,7 +126,7 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 {
   FILE *f;
   char c;
-  char lineBuffer[1000];
+  char lineBuffer[10000];
   unsigned int line_counter=0;
   PARSE_TYPE type;
   argument arg;
@@ -422,7 +422,7 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 int parseARGLine(const char * line, argument * ret)
 {
   unsigned int i,strl;
-  char tempstr[MAX_ARG_PARSED_LEN]; /*BUG, check this*/
+  char tempstr[MAX_ARG_LEN]; /*BUG, check this*/
   signed success;
 
   success=0;
@@ -434,9 +434,9 @@ int parseARGLine(const char * line, argument * ret)
       for(i=1;i<(arg_nmatch);i++)
 	{
 	  /*if(arg_pmatch[i].rm_so != arg_pmatch[i].rm_eo)*/
-	    if((arg_pmatch[i].rm_eo-arg_pmatch[i].rm_so) < MAX_ARG_PARSED_LEN)
-	      if(arg_pmatch[i].rm_so < MAX_ARG_PARSED_LEN)
-		if(arg_pmatch[i].rm_eo < MAX_ARG_PARSED_LEN)
+	    if((arg_pmatch[i].rm_eo-arg_pmatch[i].rm_so) < MAX_ARG_LEN)
+	      if(arg_pmatch[i].rm_so < MAX_ARG_LEN)
+		if(arg_pmatch[i].rm_eo < MAX_ARG_LEN)
 		  {
 		    strl=arg_pmatch[i].rm_eo - arg_pmatch[i].rm_so;
 		    strncpy(tempstr, &line[arg_pmatch[i].rm_so], strl);
@@ -458,20 +458,20 @@ int parseARGLine(const char * line, argument * ret)
 			break;
 
 		      case 2:/*argument list*/
-			strncpy(ret->arg_subargs, tempstr, MAX_ARG_PARSED_LEN);
+			strncpy(ret->arg_subargs, tempstr, MAX_ARG_LEN);
 			ret->arg_subargs_len = strl;
 			ret->n_args = count_args(ret->arg_subargs, strl);
 			/*printf("Args string: %s\n",ret->arg_subargs);*/
 			break;
 
 		      case 3:/*opcode*/
-			strncpy(ret->arg_desc, tempstr, MAX_ARG_PARSED_LEN);
+			strncpy(ret->arg_desc, tempstr, MAX_OP_DESC);
 			ret->arg_desc_len = strl;
 			/*printf("Opcode string: %s\n",ret->arg_desc);*/
 			break;
 
 		      case 4:/*Next word*/
-			strncpy(ret->arg_overflow, tempstr, MAX_ARG_PARSED_LEN);
+			strncpy(ret->arg_overflow, tempstr, MAX_OP_DESC);
 			ret->arg_overflow_len = strl;
 			/*printf("Next Word string: %s\n",ret->arg_overflow);*/
 			break;
@@ -480,7 +480,12 @@ int parseARGLine(const char * line, argument * ret)
 			/*printf("Shift string: %s\n",tempstr);*/
 			break;
 
-		      case 6:/*Next word coding*/
+		      case 6:/*Extra regex*/
+			printf("Value string: %s\n",tempstr);
+			break;
+
+		      case 7:/**/
+			/*printf("#7 string: %s\n\n",tempstr);*/
 			/*printf("Value string: %s\n\n",tempstr);*/
 			success|=1;
 			break;
@@ -726,7 +731,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			printf("..OK, ");
 			for(i=0;i<as_ret.num;i++)
 			  {
-			    printf("code=0x%lX, size=%u, ", as_ret.opcode[i], as_ret.size[i]);
+			    printf("0x%lX(%u) ", as_ret.opcode[i], as_ret.size[i]);
 			  }
 			printf("\n");
 		      } else printf("\n");

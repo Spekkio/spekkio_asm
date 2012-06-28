@@ -220,9 +220,12 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 			if(rec.num>1)
 			  for(sc=0;sc<(rec.num-1);sc++)
 			    {
-			      printf("SUBARG:%u code=0x%lX, size=%u, ", sc, rec.opcode[sc], rec.size[sc]);
+			      /*printf("SUBARG:%u code=0x%lX, size=%u, ", sc, rec.opcode[sc], rec.size[sc]);*/
+			      ret.size[ret.num] = rec.size[sc];
+			      ret.opcode[ret.num++] = rec.opcode[sc];
 			    }
-			opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_desc, 0, found_instr->arg[i].value);
+			/*Fixa dubbel matchning*/
+			/*opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_desc, 0, found_instr->arg[i].value);*/
 			found_instr->arg[i].value = rec.opcode[rec.num-1];
 			found_instr->arg[i].is=DEFINED;
 		      }

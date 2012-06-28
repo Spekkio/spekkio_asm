@@ -31,9 +31,10 @@ void get_const_mask_bits(const char * op_desc, unmask * unmask)
 	  unmask->mask |= 1<<(strlen_op_desc-i-1);
 	}
     }
-
+  /*
   printf("value=0x%lX  ",unmask->value);
   printf("mask=0x%lX\n",unmask->mask);
+  */
 }
 
 void match_maskstring_to_args(const char * op_args, const char * op_desc)
@@ -114,11 +115,12 @@ void match_maskstring_to_args(const char * op_args, const char * op_desc)
       */
       /*ret|=op_list[i].mask_value;*/
     }
-
+  /*
   for(i=0;i<arg_c;i++)
     {
       printf("%c val=%lu [0x%lX] len=%u shift=%u mask=0x%lx\n",op_list[i].arg_t, op_list[i].arg_val, op_list[i].arg_val,op_list[i].arg_len,op_list[i].arg_shift,op_list[i].mask);
     }
+  */
 }
 
 encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_arg, const uint64_t value)
@@ -456,11 +458,12 @@ unsigned int encode_opcode(const char * op_args, const char * op_desc, const int
       ret|=op_list[i].mask_value;
     }
 
-
+  /*
   for(i=0;i<arg_c;i++)
     {
       printf("%c val=%lu [0x%lX] len=%u shift=%u masked_val=0x%lx\n",op_list[i].arg_t, op_list[i].arg_val, op_list[i].arg_val,op_list[i].arg_len,op_list[i].arg_shift,op_list[i].mask_value);
     }
+  */
 
 
   return ret | const_;

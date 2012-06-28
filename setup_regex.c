@@ -21,10 +21,19 @@ regmatch_t instr_pmatch[4]; /*increase with ':'*/
 const size_t instr_nmatch;
 
 /*used to parse the .set file, argument part*/
-const char arg_regstr[] = "^[\\ ]*\\([a-zA-Z[:punct:]]\\{1,100\\}\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z,-]*\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z01-]\\{1,64\\}\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z01-]*\\)[\\ ]*:\\{1\\}[\\ ]*\\([0-9+,-]*\\)[\\ ]*:\\{1\\}[\\ ]*\\([a-zA-Z,-]*\\)[\\ ]*:\\{1\\}.*$";
+const char arg_regstr[] = 
+"^\
+[\\ ]*\\([a-zA-Z[:punct:]]\\{1,100\\}\\)[\\ ]*:\\{1\\}\
+[\\ ]*\\([a-zA-Z,-]*\\)[\\ ]*:\\{1\\}\
+[\\ ]*\\([a-zA-Z01-]\\{1,64\\}\\)[\\ ]*:\\{1\\}\
+[\\ ]*\\([a-zA-Z01-]*\\)[\\ ]*:\\{1\\}\
+[\\ ]*\\([0-9+,-]*\\)[\\ ]*:\\{1\\}\
+[\\ ]*\\([0-9a-zA-Z,[:punct:]]*\\)[\\ ]*:\\{1\\}\
+[\\ ]*\\([a-zA-Z,-]*\\)[\\ ]*:\\{1\\}\
+.*$";
 regex_t arg_list;
-regmatch_t arg_pmatch[6+1]; /*increase with ':'*/
-const size_t arg_nmatch=6+1;
+regmatch_t arg_pmatch[7+1]; /*increase with ':'*/
+const size_t arg_nmatch=7+1;
 
 /*Return 0 if success, return 1 if error.*/
 int setup_global_regex(void)

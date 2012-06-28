@@ -44,6 +44,9 @@ typedef enum ARG_TYPE {ISHEX, ISNUMBER, ISSYMBOL, ISHSYMBOL, IS_MATCHED, ISUNDEF
 #ifndef MAX_OVERFLOWS
 #define MAX_OVERFLOWS 10
 #endif
+#ifndef MAX_SUBARG_REGEX_LEN
+#define MAX_SUBARG_REGEX_LEN 200
+#endif
 
 /*This is the maximum length of a line in the source file.*/
 #ifndef MAX_CNT_OF_LINE /*case_line in parseLine()*/
@@ -65,6 +68,7 @@ typedef struct
   char token;
   int64_t correction;
   uint64_t bitmask;
+  char subarg_regex[MAX_SUBARG_REGEX_LEN];
 }subarg;
 
 typedef struct

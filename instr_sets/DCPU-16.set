@@ -40,34 +40,35 @@ IFB:a,b:bbbbbbaaaaaa1111:   ; - performs next instruction only if (a&b)!=0
 ;LCR:a :aaaaaa0001010000:   ; - Loads the CR into 'a'
 ;SCR:a :aaaaaa0001100000:   ; - Stores the value of 'a' into CR
 ;An argument can contain the values 0-9 and x.
-
-;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Used for what instr:
+;
+;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Extra Regex:Used for what instr:
 -ARGUMENTS
-[a]        :a  :001aaa:::All:
-R[a]       :a  :001aaa:::All:                 ; Force this, since first one also matches further down.
-[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::All: ; [next word + register]
-[n]        :n  :011110:nnnnnnnnnnnnnnnn::All: ; [next word]
-L(n)       :n  :011111:nnnnnnnnnnnnnnnn::All: ; Force next word
-S(v)       :v  :1vvvvv::+1:All:               ; Force literal value
-n          :n  :011111:nnnnnnnnnnnnnnnn::All: ; next word
-v          :v  :1vvvvv::+1:All:               ; Literal value
+[a]        :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
+R[a]       :a  :001aaa::::All:                 ; Force this, since first one also matches further down.
+[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All: ; [next word + register]
+[n]        :n  :011110:nnnnnnnnnnnnnnnn:::All: ; [next word]
+P[n]       :n  :011110:nnnnnnnnnnnnnnnn:::All: ; Force [next word]
+L(n)       :n  :011111:nnnnnnnnnnnnnnnn:::All: ; Force next word
+S(v)       :v  :1vvvvv::+1:::All:              ; Force literal value
+n          :n  :011111:nnnnnnnnnnnnnnnn:::All: ; next word
+v          :v  :1vvvvv::+1:::All:              ; Literal value
 
 /*Hardsymbols will not be encoded, they will be put straight into the opcode*/
 -HARDSYMBOLS
-A          :000000:All:
-B          :000001:All:
-C          :000010:All:
-X          :000011:All:
-Y          :000100:All:
-Z          :000101:All:
-I          :000110:All:
-J          :000111:All:
-SP         :011011:All:
-PC         :011100:All:
-O          :011101:All:
-POP        :011000:All: ; [SP++]
-PEEK       :011001:All: ; [SP]
-PUSH       :011010:All: ; [--SP]
+A          :000:All:
+B          :001:All:
+C          :010:All:
+X          :011:All:
+Y          :100:All:
+Z          :101:All:
+I          :110:All:
+J          :111:All:
+SP         :11011:All:
+PC         :11100:All:
+O          :11101:All:
+POP        :11000:All: ; [SP++]
+PEEK       :11001:All: ; [SP]
+PUSH       :11010:All: ; [--SP]
 
 /*These are values that also will go trough ARGUMENTS to detect an encoding rule*/
 -SYMBOLS
