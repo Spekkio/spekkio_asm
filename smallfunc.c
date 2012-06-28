@@ -166,3 +166,66 @@ uint64_t nWords(uint64_t bitsize, uint64_t wordsize)
 
   return (bitsize / wordsize) * wordsize + wordsize;
 }
+
+char * remWhite(char * s, const unsigned int len)
+{
+  unsigned int i,a;
+  signed foundother=0;
+  for(i=0;i<len;i++)
+    {
+      if(isspace(s[i]) && foundother==0)
+	{
+	  for(a=i;a<len;a++)
+	    {
+	      s[a]=s[a+1];
+	    }
+	} else foundother=1;
+      if(isspace(s[i]) && foundother==1)
+	{
+	  s[i]=' ';
+	}
+
+    }
+  return s;
+}
+
+/*copies the string from str to store until it finds the character split*/
+/*if there is a string like this "abc,def,xyz" and we want the string "def"*/
+/*specify split=',' and nth=1 for the second string split by the character ','*/
+/*if the character split is within a [], () or {} it ignores that one*/
+void splitString(char * store, const char * str, const unsigned int len, const char split, const unsigned int nth)
+{
+  unsigned int i,a,b;
+  i=0;
+  for(b=0;b<(nth+1);b++)
+    {
+      a=0;
+      for(i=i;(i<len) && (str[i]!=split);i++)
+	{
+	  if(str[i]=='[')
+	    {
+	      for(i=i;(i<len) && (str[i]!=']');i++)
+		{
+		  store[a++]=str[i];
+		}
+	    }
+	  if(str[i]=='(')
+	    {
+	      for(i=i;(i<len) && (str[i]!=')');i++)
+		{
+		  store[a++]=str[i];
+		}
+	    }
+	  if(str[i]=='{')
+	    {
+	      for(i=i;(i<len) && (str[i]!='}');i++)
+		{
+		  store[a++]=str[i];
+		}
+	    }
+	  store[a++]=str[i];
+	}
+      i++;
+      store[a++]='\0';
+    }
+}

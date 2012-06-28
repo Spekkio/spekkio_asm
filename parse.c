@@ -412,6 +412,9 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 	    {
 	      return_value = PARSE_LINE_RET_INSTRUCTION;
 	    }
+	} else if(whitespace_clear_flag==1)
+	{
+	  return_value = PARSE_LINE_RET_ERROR;
 	}
       /*printf(" == %s",line);*/
     }
@@ -421,13 +424,13 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 
 int parseARGLine(const char * line, argument * ret)
 {
-  unsigned int i,strl;
-  char tempstr[MAX_ARG_LEN]; /*BUG, check this*/
+  unsigned int i,strl,a;
+  char tempstr[MAX_ARG_LEN]; /*Possible BUG, check this*/
+  char store[MAX_ARG_LEN];
   signed success;
 
   success=0;
-  /*Working string*/
-  /*"test[a+b]:a,b:aaabbb0101:01jsd:+1,-1:All:"*/
+
   if(!regexec(&arg_list, line, arg_nmatch, arg_pmatch, 0))
     {
       /*printf("match!\n");*/
@@ -481,7 +484,12 @@ int parseARGLine(const char * line, argument * ret)
 			break;
 
 		      case 6:/*Extra regex*/
-			printf("Value string: %s\n",tempstr);
+			for(a=0;a<MAX_ARG_LEN;a++) store[a]='\0';
+			for(a=0;a<ret->n_args;a++)
+			  {
+			    splitString(store, tempstr, strlen(tempstr), ',', a);
+			    printf("Value string #%u: %s\n",a,store);
+			  }
 			break;
 
 		      case 7:/**/
@@ -717,10 +725,9 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 		  switch(ret)
 		    {
 		    case PARSE_LINE_RET_ERROR:
-		      fprintf(stderr,"[parseLine() returned -1] @ line: %u\n",real_line_counter);
+		      fprintf(stderr,"[parseLine() returned -1] @ line: %u \"%s\"\n",real_line_counter,remWhite(lineBuffer, strlen(lineBuffer)));
 		      return -1;
 		    case PARSE_LINE_RET_INSTRUCTION:
-
 		      /*
 			parse_arguments();
 		       */
