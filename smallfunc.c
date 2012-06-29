@@ -190,9 +190,9 @@ char * remWhite(char * s, const unsigned int len)
 }
 
 /*copies the string from str to store until it finds the character split*/
+/*if the character split is within a [], () or {} it ignores that one*/
 /*if there is a string like this "abc,def,xyz" and we want the string "def"*/
 /*specify split=',' and nth=1 for the second string split by the character ','*/
-/*if the character split is within a [], () or {} it ignores that one*/
 void splitString(char * store, const char * str, const unsigned int len, const char split, const unsigned int nth)
 {
   unsigned int i,a,b;

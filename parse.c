@@ -488,6 +488,7 @@ int parseARGLine(const char * line, argument * ret)
 			for(a=0;a<ret->n_args;a++)
 			  {
 			    splitString(store, tempstr, strlen(tempstr), ',', a);
+			    strncpy(ret->sub_arg[a].subarg_regex, tempstr, MAX_SUBARG_REGEX_LEN);
 			    printf("Value string #%u: %s\n",a,store);
 			  }
 			break;

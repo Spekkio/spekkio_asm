@@ -79,12 +79,14 @@ void free_global_regex(void)
 /*returns 0 if success, 1 if memory error or other error*/
 int make_arg_regex(argument * arg)
 {
+  char tempstr[MAX_SUBARG_REGEX_LEN] = " ";
   char * long_regex;
   size_t nmatch;
   regmatch_t * pmatch;
-  unsigned int i,a,reg_ctr;
+  unsigned int i,a,reg_ctr,subarg_index;
   signed found,success;
 
+  const char basic[]="\\(%s\\)[\\ ]*";
   const char variable[]="\\([0-9A-Za-z]\\{1,100\\}\\)[\\ ]*";
   const unsigned int strlen_var = strlen(variable);
   const char character[]="%c\\{1\\}[\\ ]*";
@@ -95,6 +97,7 @@ int make_arg_regex(argument * arg)
 
   reg_ctr=0;
   success=0;
+  subarg_index=0;
 
   nmatch = arg->n_args+1;
   pmatch = malloc(sizeof(regmatch_t)*nmatch);
@@ -117,8 +120,16 @@ int make_arg_regex(argument * arg)
 		{
 		  if(arg->arg_subargs[a] == arg->arg_regex[i])
 		    {
-		      reg_ctr+=snprintf(&long_regex[reg_ctr],long_regex_len,variable);
-		      
+		      if(arg->sub_arg[subarg_index].subarg_regex[0]!='\0')
+			{
+			  snprintf(tempstr, MAX_SUBARG_REGEX_LEN, basic, arg->sub_arg[subarg_index].subarg_regex);
+			  reg_ctr+=snprintf(&long_regex[reg_ctr],long_regex_len,tempstr,(const char *)"");
+			}
+		      else
+			{
+			  reg_ctr+=snprintf(&long_regex[reg_ctr],long_regex_len,variable);
+			}
+		      subarg_index++;
 		      found=1;
 		    }
 		}
