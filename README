@@ -7,30 +7,51 @@ of the instruction set from the Microchip MCU Datasheets.
 Currently I have added the DCPU-16 instruction set from the game 0x10c.
 
 This is the output from the assembler as it looks now with DCPU specification loaded.
-As you can see it does not compute the value of the pointers yet, and there are some
-double matches, for instance [X] type argument also matches to [0x1000] type argument.
+As you can see it does not compute the value of the pointers yet, But I fixed the double
+matches by adding some more rules for matching. I now have regular expressions for subarguments.
+So for instance [a] : a : 001aaa ::: [ABC]\{1\} :All:
+will only match for SET X, [A] or SET X, [B], but not for SET X, [0x1000].
 
 
-SET A, 0x30, ..OK, code=0x30, size=16, code=0x7C01, size=16,
-SET [0x1000], [a] 0x1000, SUBARG:0 code=0x1000, size=13, 0x20, ..OK, code=0x20, size=16, code=0x7C81, size=16, (Double match error)
-SUB A, [0x1000], [a] 0x1000, SUBARG:0 code=0x1000, size=13, ..OK, code=0x2003, size=16, (Double match error)
-IFN A, 0x10, ..OK, code=0xC00D, size=16,
-SET PC, crash, n crash,
-SET I, 10, ..OK, code=0xA861, size=16,
-SET A, 0x2000, ..OK, code=0x2000, size=16, code=0x7C01, size=16,
+Debug/Work in progress/Output looks like this
+instruction set: 21 kB
+argument list: 1435 kB
+Parsing instructions..
+Parsing arguments..
+Value string #0: [ABCXYZIJ]\{1\}
+Value string #0: 
+Value string #0: [a-zA-Z0-9]\{1,100\}
+Value string #1: [ABCXYZIJ]\{1\}
+Value string #0: 
+Value string #0: 
+Value string #0: 
+Value string #0: :
+Value string #0: 
+Value string #0: :
+Parsing hard symbols..
+Creating POSIX regular expressions...OK
+Assembling asmtest.asm..
+SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) 
+SET [0x1000], [n] 0x1000, 0x20, ..OK, 0x1000(13) 0x20(16) 0x7DE1(16) 
+SUB A, [0x1000], [n] 0x1000, ..OK, 0x1000(13) 0x7803(16) 
+IFN A, 0x10, ..OK, 0x10(16) 0x7C0D(16) 
+SET PC, crash, n crash, 
+SET I, 10, ..OK, 0xA(16) 0x7C61(16) 
+SET A, 0x2000, ..OK, 0x2000(16) 0x7C01(16) 
 found tag: loop
 
-SET [0x2000+I], [n+a] 0x2000, I, SUBARG:0 code=0x2000, size=14, SUBARG:1 code=0x6, size=3, [A], [a] A, SUBARG:0 code=0x0, size=0, ..OK, code=0x2161, size=16,  (Double match error, just happens to match correctly)
-SUB I, 1, ..OK, code=0x8463, size=16,
-IFN I, 0, ..OK, code=0x806D, size=16,
-SET PC, loop, n loop,
-SET X, 0x4, ..OK, code=0x9031, size=16,
-JSR testsub, n testsub,
-SET PC, crash, n crash,
+SET [0x2000+I], [n+a] 0x2000, I, [A], [a] A, ..OK, 0x2000(14) 0x6(3) 0x0(0) 0x2161(16) 
+SUB I, 1, ..OK, 0x1(16) 0x7C63(16) 
+IFN I, 0, ..OK, 0x7C6D(16) 
+SET PC, loop, n loop, 
+SET X, 0x4, ..OK, 0x4(16) 0x7C31(16) 
+JSR testsub, n testsub, 
+SET PC, crash, n crash, 
 found tag: testsub
 
-SHL X, 4, ..OK, code=0x9037, size=16,
-SET PC, POP, ..OK, code=0x61C1, size=16,
+SHL X, 4, ..OK, 0x4(16) 0x7C37(16) 
+SET PC, POP, ..OK, 0x61C1(16) 
 found tag: crash
 
-SET PC, crash, n crash,
+SET PC, crash, n crash, 
+Success!
