@@ -29,7 +29,7 @@ const char arg_regstr[] =
 [\\ ]*\\([a-zA-Z01-]*\\)[\\ ]*:\\{1\\}\
 [\\ ]*\\([0-9+,-]*\\)[\\ ]*:\\{1\\}\
 [\\ ]*\\([0-9a-zA-Z,[:punct:]]*\\)[\\ ]*:\\{1\\}\
-[\\ ]*\\([a-zA-Z,-]*\\)[\\ ]*:\\{1\\}\
+[\\ ]*\\(All\\)[\\ ]*:\\{1\\}\
 .*$";
 regex_t arg_list;
 regmatch_t arg_pmatch[7+1]; /*increase with ':'*/
@@ -153,7 +153,7 @@ int make_arg_regex(argument * arg)
 	{
 	  success=1;
 	}
-    } else return 1;
+    } else success=0;
 
   free(pmatch);
   free(long_regex);

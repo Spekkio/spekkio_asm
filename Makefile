@@ -2,8 +2,8 @@ objects = parse.o encode.o setup_regex.o smallfunc.o assemble.o
 all_objects = as $(objects)
 flags=-g -Wall -Wextra -Werror -pedantic
 std=-std=c99
-optimize=-O3 -msse3 -msse4.1 -msse4.2 -mfpmath=both -ffast-math
-#optimize=
+#optimize=-O3 -msse3 -msse4.1 -msse4.2 -mfpmath=both -ffast-math
+optimize=
 libs=-lm
 
 target: $(all_objects)

@@ -80,6 +80,7 @@ int match_argument(char * result, const int max_result_len, const char * match, 
 		{
 		  /*Potential Bug*/
 		  /*Could need some more checking, check if rm_so and rm_eo doesn't point outside string, etc*/
+
 		  if((pmatch[arg_number+1].rm_eo-pmatch[arg_number+1].rm_so)>=0)
 		    {
 		      /*printf("Match[%s] @ %u, %u\n", match, pmatch[arg_number+1].rm_so, pmatch[arg_number+1].rm_eo);*/
@@ -490,17 +491,22 @@ int parseARGLine(const char * line, argument * ret)
 			break;
 
 		      case 5:/*Shifts*/
-			/*printf("Shift string: %s\n",tempstr);*/
+			printf("Shift string: %s\n",tempstr);
 			break;
 
 		      case 6:/*Extra regex*/
-			for(a=0;a<MAX_ARG_LEN;a++) store[a]='\0';
-			for(a=0;a<ret->n_args;a++)
+			if(tempstr[0]==':' && tempstr[1]=='\0')
 			  {
-			    ret->sub_arg[a].subarg_regex[0]='\0';
-			    splitString(store, tempstr, strlen(tempstr), ',', a);
-			    strncpy(ret->sub_arg[a].subarg_regex, store, MAX_SUBARG_REGEX_LEN);
-			    printf("Value string #%u: %s\n",a,store);
+			  }else
+			  {
+			    for(a=0;a<MAX_ARG_LEN;a++) store[a]='\0';
+			    for(a=0;a<ret->n_args;a++)
+			      {
+				ret->sub_arg[a].subarg_regex[0]='\0';
+				splitString(store, tempstr, strlen(tempstr), ',', a);
+				strncpy(ret->sub_arg[a].subarg_regex, store, MAX_SUBARG_REGEX_LEN);
+				printf("Value string #%u: %s\n",a,store);
+			      }
 			  }
 			break;
 
