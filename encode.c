@@ -202,8 +202,6 @@ encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_
 	}
     }
 
-  /*printf("0x%X - 0x%X\n",const_,const_mask);*/
-
   /*assign values, and mask out overflow bits*/
   /*
   for(i=0;i<arg_c;i++)
@@ -250,6 +248,8 @@ encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_
   */
 
   retn.value = ret | const_;
+
+  /*printf("\n0x%lX - 0x%lX - 0x%lX\n",const_,const_mask, retn.value);*/
 
   return retn;
 }

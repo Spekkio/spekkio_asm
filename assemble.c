@@ -313,9 +313,17 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	    {
 	      /*printf("(0x%lX), ", found_instr->arg[i].value);*/
 	      if(found_instr->is==ISARGUMENT)
-		{
-		  ret.size[ret.num] = nWords(bitSize(found_instr->arg[i].value),16); /*should not be hardcoded*/
-		  ret.opcode[ret.num++] = found_instr->arg[i].value;
+		{ 
+		  if(arg_list->arg[found_instr->instr_index].arg_overflow_len>0)
+		    {
+		      printf("[%s, %u]",arg_list->arg[found_instr->instr_index].arg_subargs,i);
+		      opret = encode_op(arg_list->arg[found_instr->instr_index].arg_subargs, arg_list->arg[found_instr->instr_index].arg_overflow, i, found_instr->arg[i].value);
+		      if(!opret.error)
+			{
+			  ret.size[ret.num] = nWords(bitSize(found_instr->arg[i].value),16);
+			  ret.opcode[ret.num++] = found_instr->arg[i].value;
+			}
+		    }
 		}
 	    }else
 	    {
@@ -342,6 +350,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	    {
 	    case ISINSTRUCTION:
 	      ret.size[ret.num] = set->instr[found_instr->instr_index].op_len;
+
 	      ret.opcode[ret.num++] = encode_opcode_n(found_instr, set->instr[found_instr->instr_index].args, set->instr[found_instr->instr_index].op_desc);
 	      
 	      break;
