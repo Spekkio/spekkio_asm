@@ -157,7 +157,7 @@ uint64_t bitSize(uint64_t a)
   return i;
 }
 
-uint64_t nWords(uint64_t bitsize, uint64_t wordsize)
+uint64_t nWords(const uint64_t bitsize, const uint64_t wordsize)
 {
   if((bitsize % wordsize) == 0)
     {
