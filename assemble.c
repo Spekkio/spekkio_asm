@@ -316,7 +316,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		{ 
 		  if(arg_list->arg[found_instr->instr_index].arg_overflow_len>0)
 		    {
-		      printf("[%s, %u]",arg_list->arg[found_instr->instr_index].arg_subargs,i);
+		      /*printf("[%s, %u]",arg_list->arg[found_instr->instr_index].arg_subargs,i);*/
 		      opret = encode_op(arg_list->arg[found_instr->instr_index].arg_subargs, arg_list->arg[found_instr->instr_index].arg_overflow, i, found_instr->arg[i].value);
 		      if(!opret.error)
 			{

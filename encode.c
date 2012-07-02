@@ -26,9 +26,9 @@ void get_const_mask_bits(const char * op_desc, unmask * unmask)
 	{
 	  if(op_desc[i]=='1')
 	    {
-	      unmask->value |= 1<<(strlen_op_desc-i-1);
+	      unmask->value |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	    }
-	  unmask->mask |= 1<<(strlen_op_desc-i-1);
+	  unmask->mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	}
     }
   /*
@@ -88,7 +88,7 @@ void match_maskstring_to_args(const char * op_args, const char * op_desc)
 	{
 	  if(op_list[a].arg_t == op_desc[i])
 	    {
-	      op_list[a].mask |= 1<<(strlen_op_desc-i-1);
+	      op_list[a].mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	      op_list[a].arg_len++;
 	      op_list[a].arg_shift=strlen_op_desc-c;
 	    } else
@@ -96,9 +96,9 @@ void match_maskstring_to_args(const char * op_args, const char * op_desc)
 	      {
 		if(op_desc[i]=='1')
 		  {
-		    const_ |= 1<<(strlen_op_desc-i-1);
+		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 		  }
-		const_mask |= 1<<(strlen_op_desc-i-1);
+		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	      }
 	}
     }
@@ -107,11 +107,11 @@ void match_maskstring_to_args(const char * op_args, const char * op_desc)
   for(i=0;i<arg_c;i++)
     {
       /*
-      op_list[i].mask_value= op_list[i].arg_val & ((1<<(op_list[i].arg_len+1))-1);
+      op_list[i].mask_value= op_list[i].arg_val & ((((uint64_t)1)<<(op_list[i].arg_len+1))-1);
       op_list[i].mask_value= op_list[i].mask_value << op_list[i].arg_shift;
       */
       /*
-      op_list[i].mask = ((1<<(op_list[i].arg_len))-1)<<op_list[i].arg_shift;
+      op_list[i].mask = ((((uint64_t)1)<<(op_list[i].arg_len))-1)<<op_list[i].arg_shift;
       */
       /*ret|=op_list[i].mask_value;*/
     }
@@ -195,9 +195,9 @@ encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_
 	      {
 		if(op_desc[i]=='1')
 		  {
-		    const_ |= 1<<(strlen_op_desc-i-1);
+		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 		  }
-		const_mask |= 1<<(strlen_op_desc-i-1);
+		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	      }
 	}
     }
@@ -206,7 +206,7 @@ encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_
   /*
   for(i=0;i<arg_c;i++)
     {
-      op_list[i].mask_value= value & ((1<<(op_list[i].arg_len+1))-1);
+      op_list[i].mask_value= value & ((((uint64_t)1)<<(op_list[i].arg_len+1))-1);
       op_list[i].mask_value= op_list[i].mask_value << op_list[i].arg_shift;
       ret|=op_list[i].mask_value;
       if(value<round(pow(2,op_list[i].arg_len)))
@@ -226,7 +226,7 @@ encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_
   printf("\n+---------------\n");
   */
 
-  op_list[n_arg].mask_value= value & ((1<<(op_list[n_arg].arg_len+1))-1);
+  op_list[n_arg].mask_value= value & ((((uint64_t)1)<<(op_list[n_arg].arg_len+1))-1);
   op_list[n_arg].mask_value= op_list[n_arg].mask_value << op_list[n_arg].arg_shift;
   ret|=op_list[n_arg].mask_value;
   if(value<round(pow(2,op_list[n_arg].arg_len)))
@@ -324,9 +324,9 @@ unsigned int encode_opcode_n(const instruction * found_instr, const char * op_ar
 	      {
 		if(op_desc[i]=='1')
 		  {
-		    const_ |= 1<<(strlen_op_desc-i-1);
+		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 		  }
-		const_mask |= 1<<(strlen_op_desc-i-1);
+		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	      }
 	}
     }
@@ -337,7 +337,7 @@ unsigned int encode_opcode_n(const instruction * found_instr, const char * op_ar
   for(i=0;i<arg_c;i++)
     {
       value = found_instr->arg[i].value;
-      op_list[i].mask_value= value & ((1<<(op_list[i].arg_len+1))-1);
+      op_list[i].mask_value= value & ((((uint64_t)1)<<(op_list[i].arg_len+1))-1);
       op_list[i].mask_value= op_list[i].mask_value << op_list[i].arg_shift;
       ret|=op_list[i].mask_value;
       if(value<round(pow(2,op_list[i].arg_len)))
@@ -441,9 +441,9 @@ unsigned int encode_opcode(const char * op_args, const char * op_desc, const int
 	      {
 		if(op_desc[i]=='1')
 		  {
-		    const_ |= 1<<(strlen_op_desc-i-1);
+		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 		  }
-		const_mask |= 1<<(strlen_op_desc-i-1);
+		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	      }
 	}
     }
@@ -453,7 +453,7 @@ unsigned int encode_opcode(const char * op_args, const char * op_desc, const int
   /*assign values, and mask out overflow bits*/
   for(i=0;i<arg_c;i++)
     {
-      op_list[i].mask_value= op_list[i].arg_val & ((1<<(op_list[i].arg_len+1))-1);
+      op_list[i].mask_value= op_list[i].arg_val & ((((uint64_t)1)<<(op_list[i].arg_len+1))-1);
       op_list[i].mask_value= op_list[i].mask_value << op_list[i].arg_shift;
       ret|=op_list[i].mask_value;
     }
