@@ -68,11 +68,11 @@ HWI:a  :aaaaaa1001000000:  ;sends an interrupt to hardware a
 
 ;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Shift the value:Used for what instr:
 -ARGUMENTS
-R(a)       :a  :001aaa:::All:
-[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::All: ; [next word + register]
-[n]        :n  :011110:nnnnnnnnnnnnnnnn::All: ; [next word]
-n          :n  :011111:nnnnnnnnnnnnnnnn::All: ; next word
-v          :v  :1vvvvv::+1:All:               ; Literal value [-1..30], there is a shift +1
+[a]        :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
+[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All: ; [next word + register]
+[n]        :n  :011110:nnnnnnnnnnnnnnnn:::All: ; [next word]
+n          :n  :011111:nnnnnnnnnnnnnnnn:::All: ; next word
+v          :v  :1vvvvv::+1::All:               ; Literal value [-1..30], there is a shift +1
 
 -HARDSYMBOLS
 A          :000000:All:

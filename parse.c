@@ -436,6 +436,7 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 int parseARGLine(const char * line, argument * ret)
 {
   unsigned int i,strl,a;
+  int tempint;
   char tempstr[MAX_ARG_LEN]; /*Possible BUG, check this*/
   char store[MAX_ARG_LEN];
   signed success;
@@ -491,7 +492,13 @@ int parseARGLine(const char * line, argument * ret)
 			break;
 
 		      case 5:/*Shifts*/
-			printf("Shift string: %s\n",tempstr);
+			/*printf("Shift string: %s",tempstr);*/
+			if(sscanf(tempstr, "%i", &tempint)==1)
+			  {
+			    /*printf(" -> %+i",tempint);*/
+			    ret->shift=tempint;
+			  }
+			/*printf("\n");*/
 			break;
 
 		      case 6:/*Extra regex*/
@@ -505,7 +512,7 @@ int parseARGLine(const char * line, argument * ret)
 				ret->sub_arg[a].subarg_regex[0]='\0';
 				splitString(store, tempstr, strlen(tempstr), ',', a);
 				strncpy(ret->sub_arg[a].subarg_regex, store, MAX_SUBARG_REGEX_LEN);
-				printf("Value string #%u: %s\n",a,store);
+				/*printf("Value string #%u: %s\n",a,store);*/
 			      }
 			  }
 			break;
