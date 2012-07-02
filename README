@@ -53,24 +53,24 @@ current size: 144
 SET A, 0x2000, ..OK, 0x2000(16) 0x7C01(16) 
 current size: 176
 found tag: loop
-SET [0x2000+I], [n+a] 0x2000, I, [A], [a] A, ..OK, 0x2000(16) 0x6(16) 0x0(0) 0x2161(16) 
-current size: 224
+SET [0x2000+I], [n+a] 0x2000, I, [A], [a] A, ..OK, 0x2000(16) 0x2161(16) 
+current size: 208
 SUB I, 1, ..OK, 0x8463(16) 
-current size: 240
+current size: 224
 IFN I, 0, ..OK, 0x806D(16) 
-current size: 256
+current size: 240
 SET PC, loop, ..OK, 0xADC1(16) 
-current size: 272
+current size: 256
 SET X, 0x4, ..OK, 0x9031(16) 
-current size: 288
+current size: 272
 JSR testsub, n testsub, 
 SET PC, crash, n crash, 
 found tag: testsub
 SHL X, 4, ..OK, 0x9037(16) 
-current size: 304
+current size: 288
 SET PC, POP, ..OK, 0x61C1(16) 
-current size: 320
+current size: 304
 found tag: crash
-SET PC, crash, ..OK, 0xD1C1(16) 
-current size: 336
+SET PC, crash, ..OK, 0xCDC1(16) 
+current size: 320
 Success!
