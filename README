@@ -18,17 +18,25 @@ instruction set: 21 kB
 argument list: 1435 kB
 Parsing instructions..
 Parsing arguments..
+Shift string: 
 Value string #0: [ABCXYZIJ]\{1\}
+Shift string: 
 Value string #0: 
+Shift string: 
 Value string #0: [a-zA-Z0-9]\{1,100\}
 Value string #1: [ABCXYZIJ]\{1\}
+Shift string: 
 Value string #0: 
+Shift string: 
 Value string #0: 
+Shift string: 
 Value string #0: 
-Value string #0: :
+Shift string: +1
+Shift string: 
 Value string #0: 
-Value string #0: :
+Shift string: +1
 Parsing hard symbols..
+Parsing symbols..
 Creating POSIX regular expressions...OK
 Assembling asmtest.asm..
 SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) 
@@ -37,32 +45,32 @@ SET [0x1000], [n] 0x1000, 0x20, ..OK, 0x1000(16) 0x20(16) 0x7DE1(16)
 current size: 80
 SUB A, [0x1000], [n] 0x1000, ..OK, 0x1000(16) 0x7803(16) 
 current size: 112
-IFN A, 0x10, ..OK, 0x10(16) 0x7C0D(16) 
-current size: 144
+IFN A, 0x10, ..OK, 0xC00D(16) 
+current size: 128
 SET PC, crash, n crash, 
-SET I, 10, ..OK, 0xA(16) 0x7C61(16) 
-current size: 176
+SET I, 10, ..OK, 0xA861(16) 
+current size: 144
 SET A, 0x2000, ..OK, 0x2000(16) 0x7C01(16) 
-current size: 208
+current size: 176
 found tag: loop
 SET [0x2000+I], [n+a] 0x2000, I, [A], [a] A, ..OK, 0x2000(16) 0x6(16) 0x0(0) 0x2161(16) 
+current size: 224
+SUB I, 1, ..OK, 0x8463(16) 
+current size: 240
+IFN I, 0, ..OK, 0x806D(16) 
 current size: 256
-SUB I, 1, ..OK, 0x1(16) 0x7C63(16) 
+SET PC, loop, ..OK, 0xADC1(16) 
+current size: 272
+SET X, 0x4, ..OK, 0x9031(16) 
 current size: 288
-IFN I, 0, ..OK, 0x7C6D(16) 
-current size: 304
-SET PC, loop, ..OK, 0xD(16) 0x7DC1(16) 
-current size: 336
-SET X, 0x4, ..OK, 0x4(16) 0x7C31(16) 
-current size: 368
 JSR testsub, n testsub, 
 SET PC, crash, n crash, 
 found tag: testsub
-SHL X, 4, ..OK, 0x4(16) 0x7C37(16) 
-current size: 400
+SHL X, 4, ..OK, 0x9037(16) 
+current size: 304
 SET PC, POP, ..OK, 0x61C1(16) 
-current size: 416
+current size: 320
 found tag: crash
-SET PC, crash, ..OK, 0x1A(16) 0x7DC1(16) 
-current size: 448
+SET PC, crash, ..OK, 0xD1C1(16) 
+current size: 336
 Success!
