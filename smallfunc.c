@@ -161,7 +161,7 @@ uint64_t nWords(uint64_t bitsize, uint64_t wordsize)
 {
   if((bitsize % wordsize) == 0)
     {
-      return (bitsize/wordsize);
+      return (bitsize/wordsize)*16;
     }
 
   return (bitsize / wordsize) * wordsize + wordsize;
@@ -173,7 +173,7 @@ char * remWhite(char * s, const unsigned int len)
   signed foundother=0;
   for(i=0;i<len;i++)
     {
-      if(isspace(s[i]) && foundother==0)
+      if( (isspace(s[i]) || s[i]==' ') && foundother==0)
 	{
 	  for(a=i;a<len;a++)
 	    {
@@ -184,8 +184,16 @@ char * remWhite(char * s, const unsigned int len)
 	{
 	  s[i]=' ';
 	}
-
     }
+  foundother=0;
+  for(i=len-1;i>0;i--)
+    {
+      if( (isspace(s[i]) || s[i]==' ') && foundother==0)
+	{
+	  s[i]=0;
+	} else foundother=1;
+    }
+  
   return s;
 }
 

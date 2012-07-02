@@ -314,7 +314,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      /*printf("(0x%lX), ", found_instr->arg[i].value);*/
 	      if(found_instr->is==ISARGUMENT)
 		{
-		  ret.size[ret.num] = bitSize(found_instr->arg[i].value);
+		  ret.size[ret.num] = nWords(bitSize(found_instr->arg[i].value),16); /*should not be hardcoded*/
 		  ret.opcode[ret.num++] = found_instr->arg[i].value;
 		}
 	    }else

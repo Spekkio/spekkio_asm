@@ -157,8 +157,12 @@ typedef struct
   small_argument arg[MAX_ARGS]; /*A list of the found arguments, they have to be matched later*/
 }instruction;
 
-PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store);
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table);
+
+extern unsigned int size_counter;
+
+
+PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store, symbol_table * sym_table);
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, symbol_table * symb_list, const symbol_table * hsymb_table);
 void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table, symbol_table * hsym_table);
 int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr instr, cpu_instr_set * set);

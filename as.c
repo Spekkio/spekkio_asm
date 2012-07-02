@@ -26,6 +26,7 @@ int main(int argc, char **argv)
   symbols = 0;
   sym_table.n_symbols=0;
   hsym_table.n_symbols=0;
+  size_counter=0;
 
   if(!setup_global_regex())
     {

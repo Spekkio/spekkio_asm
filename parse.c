@@ -15,6 +15,8 @@
 #define MAX_LONG_REGEX 1000
 #endif
 
+unsigned int size_counter=0;
+
 /*return 0 on success, 1 if no match, index stored in ret*/
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl)
 {
@@ -261,7 +263,7 @@ void addArgument(const argument arg, argument_list * arg_list)
   arg_list->num++;
 }
 
-PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store/*, macro * store*/)
+PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store, symbol_table * sym_table/*, macro * store*/)
 {
   PARSE_LINE_RET return_value;
   unsigned int i,c,a,cnt_args,the_instr;
@@ -269,6 +271,8 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
   signed found_instr;
   char case_line[MAX_CNT_OF_LINE];
   signed whitespace_clear_flag, whitespace_clear_flag_delay;
+  symbol new_symbol;
+
 
   for(i=0;(i<MAX_CNT_OF_LINE) && (line[i]!='\n') && (line[i]!='\0');i++)
     {
@@ -303,7 +307,13 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 	      temp[a]=line[i];
 	    }
 	  temp[a]='\0';
-	  printf("found tag: %s\n",temp);
+	  printf("found tag: %s\n",remWhite(temp,strlen(temp)));
+	  /*addSymbol tag*/
+	  strncpy(new_symbol.string, remWhite(temp,strlen(temp)), MAX_SYM_NAME_LEN);
+	  new_symbol.value = size_counter / 16; /*each pointer is 16 bit, this whould not be hardcoded*/
+	  new_symbol.bitlen = 0;
+	  new_symbol.is = DEFINED;
+	  addSymbol(new_symbol, sym_table);
 
 	  whitespace_clear_flag=0; /*Count tags as whitespace*/
 	  whitespace_clear_flag_delay=0;
@@ -663,7 +673,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
   return 1;
 }
 
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, const symbol_table * symb_list, const symbol_table * hsymb_table)
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, symbol_table * symb_list, const symbol_table * hsymb_table)
 {
   char c;
   char lineBuffer[MAX_CNT_OF_LINE];
@@ -723,7 +733,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 	      lineBuffer[line_counter]='\0';
 	      if(line_counter>1)
 		{
-		  ret=parseLine(lineBuffer,set,&found_instr);
+		  ret=parseLine(lineBuffer,set,&found_instr, symb_list);
 		  switch(ret)
 		    {
 		    case PARSE_LINE_RET_ERROR:
@@ -741,8 +751,10 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			for(i=0;i<as_ret.num;i++)
 			  {
 			    printf("0x%lX(%u) ", as_ret.opcode[i], as_ret.size[i]);
+			    size_counter+=as_ret.size[i]; /*16 should not be hardcoded here*/
 			  }
 			printf("\n");
+			printf("current size: %u\n",size_counter);
 		      } else printf("\n");
 
 		      break;
