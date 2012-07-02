@@ -9,6 +9,7 @@
 -OPTIONS
 WORD_LEN=STATIC     ; Words are x bit static, OP Codes they cannot vary in size, RISC type machine.
 WORD_SIZE=16        ; 16bit OPcodes
+POINTER_SIZE=16	    ; 16bit pointers, pointer 0x0001 points 16 bit after pointer 0x0000
 WORDS_RAM=0x10000   ; Number of Words in RAM 
 
 ;BITS_RAM=0x100000 
