@@ -140,12 +140,12 @@ int main(int argc, char **argv)
 
       if(try_again)
 	{
-	  printf("Failed assembly.\n");
+	  printf("\nFailed assembly.\n");
 	  retval=1;
 	}
       else if(try_again==0)
 	{
-	  printf("Assembled OK.\n");
+	  printf("\nAssembled OK.\n");
 	  retval=0;
 	}
 
