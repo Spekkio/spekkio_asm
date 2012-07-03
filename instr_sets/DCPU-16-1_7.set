@@ -1,20 +1,9 @@
-; It's not possible to design a OPcodes with mixed-in 
-; arguments, like this bbbbaabbaaaa0101, they need to
-; be in a line -> bbbbbbaaaaaa0101.
-
-; x = dont care
-; a-z,A-Z (except x) = argument
-; a-z!=A-Z
-
 -OPTIONS
 NAME="DCPU-16"
 VERSION=1.7
 WORD_LEN=STATIC              ; Words are x bit static, OP Codes they cannot vary in size, RISC type machine.
 WORD_SIZE=16                 ; 16bit OPcodes
 WORDS_RAM=0x10000            ; Number of Words in RAM 
-
-;BITS_RAM=0x100000 
-;BYTES_RAM=0x20000  ; 128kByte RAM
 
 ;Intruction name:ARG1,ARG2,..:OPCODE(bits)
 -INSTRUCTIONS
@@ -59,58 +48,36 @@ HWQ:a  :aaaaaa1000100000:  ;sets A, B, C, X, Y registers to information about ha
                            ;X+(Y<<16) is a 32 bit word identifying the manufacturer
 HWI:a  :aaaaaa1001000000:  ;sends an interrupt to hardware a
 
-;An [sub]argument can contain the values 0-9 and x.
-;List below defines rules for matching
-;the order of this list could be important
-;
-;for example, the last two rules are the same ('n' and 'v').
-;they both match 
-
 ;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Shift the value:Used for what instr:
 -ARGUMENTS
-[a]        :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
-[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All: ; [next word + register]
-[n]        :n  :011110:nnnnnnnnnnnnnnnn:::All: ; [next word]
-n          :n  :011111:nnnnnnnnnnnnnnnn:::All: ; next word
-v          :v  :1vvvvv::+1::All:               ; Literal value [-1..30], there is a shift +1
+[a]  :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
+R[a] :a  :001aaa:::[ABCXYZIJ]\{1\}:All:  ; Harder force on this form
+
+[n+a]:n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All: ; [next word + register]
+
+[n]  :n  :011110:nnnnnnnnnnnnnnnn:::All: ; [next word]
+P[n] :n  :011110:nnnnnnnnnnnnnnnn:::All: ; Force this form
+
+n    :n  :011111:nnnnnnnnnnnnnnnn:::All: ; next word
+L[n] :n  :011111:nnnnnnnnnnnnnnnn:::All: ; Force this form
+
+v    :v  :1vvvvv::+1::All:               ; Literal value [-1..30], there is a shift +1?
+S[v] :v  :1vvvvv::+1::All:               ; Force this form
 
 -HARDSYMBOLS
-A          :000000:All:
-B          :000001:All:
-C          :000010:All:
-X          :000011:All:
-Y          :000100:All:
-Z          :000101:All:
-I          :000110:All:
-J          :000111:All:
-POP        :011000:All: ; if in a [SP++]
-PUSH       :011000:All: ; if in b [--SP]
-PEEK       :011001:All: ; [SP]
-SP         :011011:All:
-PC         :011100:All:
-EX	   :011101:All:
+A          :000:All:
+B          :001:All:
+C          :010:All:
+X          :011:All:
+Y          :100:All:
+Z          :101:All:
+I          :110:All:
+J          :111:All:
+POP        :11000:All: ; if in a [SP++]
+PUSH       :11000:All: ; if in b [--SP]
+PEEK       :11001:All: ; [SP]
+SP         :11011:All:
+PC         :11100:All:
+EX	   :11101:All:
 
 -SYMBOLS
-
-; to the value stored in 'v'.
-; For the Disassembler...
-; If a number is defined, it's either any of the two
-; arguments in the bottom. probably it's v if the value is >0x20
-; use the const_mask value to know.
-
-; Some of these, like the register names are just symbols
-; with values. So they can get put into the symbols struct.
-
-;Values: (6 bits)
-;    0x00-0x07: register (A, B, C, X, Y, Z, I or J, in that order)
-;    0x08-0x0f: [register]
-;    0x10-0x17: [next word + register]
-;         0x18: POP / [SP++]
-;         0x19: PEEK / [SP]
-;         0x1a: PUSH / [--SP]
-;         0x1b: SP
-;         0x1c: PC
-;         0x1d: O
-;         0x1e: [next word]
-;         0x1f: next word (literal)
-;    0x20-0x3f: literal value 0x00-0x1f (literal)
