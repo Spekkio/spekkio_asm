@@ -94,14 +94,16 @@ int main(int argc, char **argv)
 	  rewind(f);
 	  size_counter=0;
 	  parseFile_ret = parseFile(f,&set, &arg_list, &sym_table, &hsym_table);
-	  if(parseFile_ret==1)
+	  switch(parseFile_ret)
 	    {
+
+	    case 1:
 	      printf("------- Has undefined lines, try again...\n");
 	      try_again=1;
 	      try_count++;
-	    }
-	  else if(parseFile_ret==0)
-	    {
+	      break;
+
+	    case 0:
 	      try_again=0;
 	      for(i=0;i<sym_table.n_symbols;i++)
 		{
@@ -117,10 +119,13 @@ int main(int argc, char **argv)
 		{
 		  printf("------- Has updated lines, try again...\n");
 		}
-	    }
-	  else if(parseFile_ret==-1)
-	    {
+	      break;
+
+	    case -1:
 	      try_again=0;
+	      break;
+
+	    default: break;
 	    }
 	}
 
