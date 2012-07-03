@@ -7,70 +7,55 @@ of the instruction set from the Microchip MCU Datasheets.
 Currently I have added the DCPU-16 instruction set from the game 0x10c.
 
 This is the output from the assembler as it looks now with DCPU specification loaded.
-As you can see it does not compute the value of the pointers yet, But I fixed the double
-matches by adding some more rules for matching. I now have regular expressions for subarguments.
-So for instance [a] : a : 001aaa ::: [ABC]\{1\} :All:
-will only match for SET X, [A] or SET X, [B], but not for SET X, [0x1000].
 
 
-Debug/Work in progress/Output looks like this
-instruction set: 21 kB
-argument list: 1435 kB
-Parsing instructions..
-Parsing arguments..
-Shift string: 
-Value string #0: [ABCXYZIJ]\{1\}
-Shift string: 
-Value string #0: 
-Shift string: 
-Value string #0: [a-zA-Z0-9]\{1,100\}
-Value string #1: [ABCXYZIJ]\{1\}
-Shift string: 
-Value string #0: 
-Shift string: 
-Value string #0: 
-Shift string: 
-Value string #0: 
-Shift string: +1
-Shift string: 
-Value string #0: 
-Shift string: +1
-Parsing hard symbols..
-Parsing symbols..
-Creating POSIX regular expressions...OK
-Assembling asmtest.asm..
-SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) 
-current size: 32
-SET [0x1000], [n] 0x1000, 0x20, ..OK, 0x1000(16) 0x20(16) 0x7DE1(16) 
-current size: 80
-SUB A, [0x1000], [n] 0x1000, ..OK, 0x1000(16) 0x7803(16) 
-current size: 112
-IFN A, 0x10, ..OK, 0xC00D(16) 
-current size: 128
-SET PC, crash, n crash, 
-SET I, 10, ..OK, 0xA861(16) 
-current size: 144
-SET A, 0x2000, ..OK, 0x2000(16) 0x7C01(16) 
-current size: 176
+Debug/Work in progress/Output looks like this, this is assembled
+using forced long pointers, to compare with the sample code from DCPU-16 1.1 spec.
+-----------------------------------------------------------------------------------------
+SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) current size: 32
+SET P[0x1000], P[n] 0x1000, 0x20, ..OK, 0x1000(16) 0x20(16) 0x7DE1(16) current size: 80
+SUB A, P[0x1000], P[n] 0x1000, ..OK, 0x1000(16) 0x7803(16) current size: 112
+IFN A, 0x10, ..OK, 0xC00D(16) current size: 128
+SET PC, L[crash], L[n] crash, ..OK, 0x1A(16) 0x7DC1(16) current size: 160
+SET I, S[10], S[v] 10, ..OK, 0xA861(16) current size: 176
+SET A, 0x2000, ..OK, 0x2000(16) 0x7C01(16) current size: 208
 found tag: loop
-SET [0x2000+I], [n+a] 0x2000, I, [A], [a] A, ..OK, 0x2000(16) 0x2161(16) 
-current size: 208
-SUB I, 1, ..OK, 0x8463(16) 
-current size: 224
-IFN I, 0, ..OK, 0x806D(16) 
-current size: 240
-SET PC, loop, ..OK, 0xADC1(16) 
-current size: 256
-SET X, 0x4, ..OK, 0x9031(16) 
-current size: 272
-JSR testsub, n testsub, 
-SET PC, crash, n crash, 
+SET [0x2000+I], [n+a] 0x2000, I, R[A], R[a] A, ..OK, 0x2000(16) 0x2161(16) current size: 240
+SUB I, 1, ..OK, 0x8463(16) current size: 256
+IFN I, 0, ..OK, 0x806D(16) current size: 272
+SET PC, L[loop], L[n] loop, ..OK, 0xD(16) 0x7DC1(16) current size: 304
+SET X, 0x4, ..OK, 0x9031(16) current size: 320
+JSR L[testsub], L[n] testsub, ..OK, 0x18(16) 0x7C10(16) current size: 352
+SET PC, L[crash], L[n] crash, ..OK, 0x1A(16) 0x7DC1(16) current size: 384
 found tag: testsub
-SHL X, 4, ..OK, 0x9037(16) 
-current size: 288
-SET PC, POP, ..OK, 0x61C1(16) 
-current size: 304
+SHL X, 4, ..OK, 0x9037(16) current size: 400
+SET PC, POP, ..OK, 0x61C1(16) current size: 416
 found tag: crash
-SET PC, crash, ..OK, 0xCDC1(16) 
-current size: 320
-Success!
+SET PC, L[crash], L[n] crash, ..OK, 0x1A(16) 0x7DC1(16) current size: 448
+Compiled OK.
+
+
+
+This is compiled using automatic choice of long/short pointers.
+-----------------------------------------------------------------------------------------
+SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) current size: 32
+SET [0x1000], [n] 0x1000, 0x20, ..OK, 0x1000(16) 0x20(16) 0x7DE1(16) current size: 80
+SUB A, [0x1000], [n] 0x1000, ..OK, 0x1000(16) 0x7803(16) current size: 112
+IFN A, 0x10, ..OK, 0xC00D(16) current size: 128
+SET PC, crash, ..OK, 0xD9C1(16) current size: 144
+SET I, 10, ..OK, 0xA861(16) current size: 160
+SET A, 0x2000, ..OK, 0x2000(16) 0x7C01(16) current size: 192
+found tag: loop
+SET [0x2000+I], [n+a] 0x2000, I, [A], [a] A, ..OK, 0x2000(16) 0x2161(16) current size: 224
+SUB I, 1, ..OK, 0x8463(16) current size: 240
+IFN I, 0, ..OK, 0x806D(16) current size: 256
+SET PC, loop, ..OK, 0xB1C1(16) current size: 272
+SET X, 0x4, ..OK, 0x9031(16) current size: 288
+JSR testsub, ..OK, 0xD010(16) current size: 304
+SET PC, crash, ..OK, 0xD9C1(16) current size: 320
+found tag: testsub
+SHL X, 4, ..OK, 0x9037(16) current size: 336
+SET PC, POP, ..OK, 0x61C1(16) current size: 352
+found tag: crash
+SET PC, crash, ..OK, 0xD9C1(16) current size: 368
+Compiled OK.
