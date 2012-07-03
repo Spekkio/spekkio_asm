@@ -15,7 +15,7 @@
 #define MAX_LONG_REGEX 1000
 #endif
 
-unsigned int size_counter;
+unsigned long int size_counter;
 
 /*return 0 on success, 1 if no match, index stored in ret*/
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl)
@@ -804,7 +804,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			    printf("0x%lX(%u) ", as_ret.opcode[i], as_ret.size[i]);
 			    size_counter+=as_ret.size[i]; /*16 should not be hardcoded here*/
 			  }
-			printf("current size: %u\n",size_counter);
+			printf("current size: %lu\n",size_counter);
 		      } else
 			{
 			  has_undef=1;

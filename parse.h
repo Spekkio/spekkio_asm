@@ -158,7 +158,7 @@ typedef struct
 }instruction;
 
 
-extern unsigned int size_counter;
+extern unsigned long int size_counter;
 
 
 PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store, symbol_table * sym_table);
