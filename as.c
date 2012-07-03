@@ -13,7 +13,10 @@ int main(int argc, char **argv)
   FILE * f;
   cpu_instr_set set;
   argument_list arg_list;
-
+  int parseFile_ret;
+  int try_count;
+  unsigned int i;
+  signed try_again;
   symbol * symbols;
   symbol * hardsymbols;
   symbol_table sym_table;
@@ -26,7 +29,6 @@ int main(int argc, char **argv)
   symbols = 0;
   sym_table.n_symbols=0;
   hsym_table.n_symbols=0;
-  size_counter=0;
 
   if(!setup_global_regex())
     {
@@ -83,12 +85,43 @@ int main(int argc, char **argv)
       printf("Assembling %s..\n",argv[1]);
       f=fopen(argv[1],"r");
     }
-
+  try_again=1;
+  try_count=0;
   if((f!=0) && (symbols!=0))
     {
-      if(parseFile(f,&set, &arg_list, &sym_table, &hsym_table)==1)
+      while(try_again && (try_count<5))
 	{
-	  printf("Success!\n");
+	  rewind(f);
+	  size_counter=0;
+	  parseFile_ret = parseFile(f,&set, &arg_list, &sym_table, &hsym_table);
+	  if(parseFile_ret==1)
+	    {
+	      printf("------- Has undefined lines, try again...\n");
+	      try_again=1;
+	      try_count++;
+	    }
+	  else if(parseFile_ret==0)
+	    {
+	      try_again=0;
+	      for(i=0;i<sym_table.n_symbols;i++)
+		{
+		  if(sym_table.table[i].is!=DEFINED)
+		    {
+		      try_again=1;
+		    }
+		}
+	      if(!try_again)
+		{
+		  printf("Compiled OK.\n");
+		} else
+		{
+		  printf("------- Has updated lines, try again...\n");
+		}
+	    }
+	  else if(parseFile_ret==-1)
+	    {
+	      try_again=0;
+	    }
 	}
 
       fclose(f);

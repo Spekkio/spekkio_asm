@@ -15,7 +15,7 @@
 #define MAX_LONG_REGEX 1000
 #endif
 
-unsigned int size_counter=0;
+unsigned int size_counter;
 
 /*return 0 on success, 1 if no match, index stored in ret*/
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl)
@@ -273,6 +273,7 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
   char case_line[MAX_CNT_OF_LINE];
   signed whitespace_clear_flag, whitespace_clear_flag_delay;
   symbol new_symbol;
+  long int f_symb;
 
 
   for(i=0;(i<MAX_CNT_OF_LINE) && (line[i]!='\n') && (line[i]!='\0');i++)
@@ -314,7 +315,24 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 	  new_symbol.value = size_counter / 16; /*each pointer is 16 bit, this whould not be hardcoded*/
 	  new_symbol.bitlen = 0;
 	  new_symbol.is = DEFINED;
-	  addSymbol(new_symbol, sym_table);
+
+	  f_symb = findSymbol(remWhite(temp,strlen(temp)), strlen(temp), sym_table);
+	  if(f_symb==-1)
+	    {
+	      addSymbol(new_symbol, sym_table);
+	    } else
+	    {
+	      if(sym_table->table[f_symb].value != (size_counter / 16))
+		{
+		  sym_table->table[f_symb].is=UPDATED;
+		} else
+		{
+		  sym_table->table[f_symb].is=DEFINED;
+		}
+	     
+	      /*Uppdatera*/
+	      sym_table->table[f_symb].value = size_counter / 16;  /*each pointer is 16 bit, this whould not be hardcoded*/
+	    }
 
 	  whitespace_clear_flag=0; /*Count tags as whitespace*/
 	  whitespace_clear_flag_delay=0;
@@ -535,6 +553,23 @@ int parseARGLine(const char * line, argument * ret)
   return success;
 }
 
+long int findSymbol(const char * str, const size_t str_len, const symbol_table * sym_table)
+{
+  long int i;
+
+  for(i=0;i<(sym_table->n_symbols);i++)
+    {
+      if(str_len==strlen(sym_table->table[i].string))
+	{
+	  if(strncmp(sym_table->table[i].string, str, str_len)==0)
+	    {
+	      return i;
+	    }
+	}
+    }
+  return -1;
+}
+
 void addSymbol(const symbol symb, symbol_table * sym_table)
 {
 
@@ -695,8 +730,10 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
   instruction found_instr;
   PARSE_LINE_RET ret;
   assemble_ret as_ret;
+  signed has_undef;
 
   hsymb_table=hsymb_table;
+  has_undef=0;
 
   c=' ';
   line_counter=0;
@@ -736,6 +773,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 	    }
 	}
 
+
       if(1)
 	{
 	  lineBuffer[line_counter]=c;
@@ -766,9 +804,12 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			    printf("0x%lX(%u) ", as_ret.opcode[i], as_ret.size[i]);
 			    size_counter+=as_ret.size[i]; /*16 should not be hardcoded here*/
 			  }
-			printf("\n");
 			printf("current size: %u\n",size_counter);
-		      } else printf("\n");
+		      } else
+			{
+			  has_undef=1;
+			  printf("UNDEFINED\n");
+			}
 
 		      break;
 		    case PARSE_LINE_RET_MACRO:
@@ -787,5 +828,5 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 	}
     }
 
-  return 1;
+  return has_undef;
 }

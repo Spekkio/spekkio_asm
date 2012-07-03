@@ -1,7 +1,7 @@
 /*#include <inttypes.h>
   #include <stdio.h>*/
 
-typedef enum is_def {DEFINED, UNDEFINED} is_def;
+typedef enum is_def {DEFINED, UNDEFINED, UPDATED} is_def;
 typedef enum PARSE_TYPE {INSTR, ARGU, OPT, SYMB, HSYMB} PARSE_TYPE;
 typedef enum ARG_TYPE {ISHEX, ISNUMBER, ISSYMBOL, ISHSYMBOL, IS_MATCHED, ISUNDEFINED} ARG_TYPE;
 
@@ -170,6 +170,7 @@ int parseARGLine(const char * line, argument * ret);
 void addArgument(const argument arg, argument_list * arg_list);
 int parseSYMBLine(const char * line, symbol * symb);
 void addSymbol(const symbol symb, symbol_table * sym_table);
+long int findSymbol(const char * str, const size_t str_len, const symbol_table * sym_table);
 
 int match_argument(char * result, const int max_result_len, const char * match, const argument * arg, const unsigned int arg_number);
 

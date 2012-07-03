@@ -177,6 +177,11 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		  found_instr->arg[i].value = symb_list->table[match_found].value;
 		  found_instr->arg[i].is=DEFINED;
 		}
+	      else if(symb_list->table[match_found].is==UPDATED)
+		{
+		  found_instr->arg[i].value = symb_list->table[match_found].value;
+		  found_instr->arg[i].is=DEFINED;
+		}
 	      break;
 
 	    case ISHSYMBOL:
