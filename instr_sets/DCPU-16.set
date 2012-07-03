@@ -47,7 +47,7 @@ S[v]       :v  :1vvvvv::+1:::All:              ; Force literal value
 n          :n  :011111:nnnnnnnnnnnnnnnn:::All: ; next word
 v          :v  :1vvvvv::+1:::All:              ; Literal value
 
-/*Hardsymbols will not be encoded, they will be put straight into the opcode*/
+; Hardsymbols will not be encoded, they will be put straight into the opcode
 -HARDSYMBOLS
 A          :000000:All:
 B          :000001:All:
@@ -64,5 +64,6 @@ POP        :011000:All: ; [SP++]
 PEEK       :011001:All: ; [SP]
 PUSH       :011010:All: ; [--SP]
 
-/*These are values that also will go trough ARGUMENTS to detect an encoding rule*/
+; These are values that also will go trough ARGUMENTS to detect an encoding rule,
+; like n or v in arguments
 -SYMBOLS
