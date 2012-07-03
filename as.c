@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 		}
 	      if(!try_again)
 		{
-		  printf("Compiled OK.\n");
+		  printf("Assembled OK.\n");
 		} else
 		{
 		  printf("------- Has updated lines, try again...\n");
