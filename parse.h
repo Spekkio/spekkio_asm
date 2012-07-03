@@ -158,11 +158,18 @@ typedef struct
 }instruction;
 
 
+typedef enum {DATA_ON, DATA_OFF}dataoutput;
+typedef struct
+{
+  dataoutput d;
+}parseFile_opt;
+
+
 extern unsigned long int size_counter;
 
 
 PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store, symbol_table * sym_table);
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, symbol_table * symb_list, const symbol_table * hsymb_table);
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, symbol_table * symb_list, const symbol_table * hsymb_table, const parseFile_opt options);
 void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg_list, symbol_table * sym_table, symbol_table * hsym_table);
 int parseCPULine(const char * line, cpu_instr * ret);
 void addInstruction(const cpu_instr instr, cpu_instr_set * set);

@@ -8,6 +8,8 @@
 #include "encode.h"
 #include "setup_regex.h"
 
+signed verbose;
+
 int main(int argc, char **argv)
 {
   FILE * f;
@@ -17,15 +19,20 @@ int main(int argc, char **argv)
   int try_count;
   unsigned int i;
   int a,retval;
-  signed try_again;
+  signed try_again, failed;
   symbol * symbols;
   symbol * hardsymbols;
   symbol_table sym_table;
   symbol_table hsym_table;
+
+  parseFile_opt options;
+
   /*unmask u;*/
   /*char result[30];*/
   /*00000000 0000 0001*/
 
+  failed=0;
+  verbose=0;
   f=0;
   symbols = 0;
   sym_table.n_symbols=0;
@@ -57,6 +64,10 @@ int main(int argc, char **argv)
   */
   for(a=0;a<argc;a++)
     {
+      if(strncmp(argv[a],"-v", 2)==0)
+	{
+	  verbose=1;
+	}
       if(strncmp(argv[a],"-set", 4)==0)
 	{
 	  a++;
@@ -80,16 +91,6 @@ int main(int argc, char **argv)
       /*printf("OK\n");*/
     }
 
-  /*get_const_mask_bits("0101asdkjas010", &u);*/
-  /*match_maskstring_to_args("a,b", "aaaaaabbbbbb1010");*/
-
-  /*Testing
-  match_argument(result,30,"[0x80+A]",&arg_list.arg[9],0);
-  printf("Argument 1 of %s is %s\n","[0x80+A]",result);
-  match_argument(result,30,"[0x80+A]",&arg_list.arg[9],1);
-  printf("Argument 2 of %s is %s\n","[0x80+A]",result);
-  */
-
   if(1)
     {
       printf("Assembling %s..\n",argv[a-1]);
@@ -97,18 +98,21 @@ int main(int argc, char **argv)
     }
   try_again=1;
   try_count=0;
+
+  options.d = DATA_OFF;
+
   if((f!=0) && (symbols!=0))
     {
       while(try_again && (try_count<5))
 	{
 	  rewind(f);
 	  size_counter=0;
-	  parseFile_ret = parseFile(f,&set, &arg_list, &sym_table, &hsym_table);
+	  parseFile_ret = parseFile(f,&set, &arg_list, &sym_table, &hsym_table, options);
 	  switch(parseFile_ret)
 	    {
 
 	    case 1:
-	      printf("\n------- Has undefined lines, try again...\n");
+	      /*printf("\n------- Has undefined lines, try again...\n");*/
 	      try_again=1;
 	      try_count++;
 	      break;
@@ -126,26 +130,33 @@ int main(int argc, char **argv)
 		{
 		} else
 		{
-		  printf("\n------- Has updated lines, try again...\n");
+		  /*printf("\n------- Has updated lines, try again...\n");*/
 		}
 	      break;
 
 	    case -1:
 	      try_again=0;
+	      failed=1;
 	      break;
 
 	    default: break;
 	    }
 	}
 
-      if(try_again)
+      if((try_again==1) || (failed==1))
 	{
-	  printf("\nFailed assembly.\n");
+	  /*printf("\nFailed assembly.\n");*/
 	  retval=1;
 	}
-      else if(try_again==0)
+      else if((try_again==0) && (failed==0))
 	{
-	  printf("\nAssembled OK.\n");
+	  /*printf("\nAssembled OK.\n");*/
+	  /*Assemble one last time with output enabled*/
+	  options.d=DATA_ON;
+	  rewind(f);
+	  size_counter=0;
+	  parseFile_ret = parseFile(f,&set, &arg_list, &sym_table, &hsym_table, options);
+	  printf("\n");
 	  retval=0;
 	}
 

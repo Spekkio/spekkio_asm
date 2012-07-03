@@ -721,7 +721,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
   return 1;
 }
 
-int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, symbol_table * symb_list, const symbol_table * hsymb_table)
+int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, symbol_table * symb_list, const symbol_table * hsymb_table, const parseFile_opt options)
 {
   static unsigned long int size_ctr2;
   char c;
@@ -810,11 +810,17 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			  }
 			if(line_switch)
 			  {
-			    printf("\n0x%04lX: ", size_counter / 16);
+			    if(options.d==DATA_ON)
+			      {
+				printf("\n0x%04lX: ", size_counter / 16);
+			      }
 			    line_switch=0;
 			  }
 
-			printf("0x%04lX ", as_ret.opcode[as_ret.num-1]);
+			if(options.d==DATA_ON)
+			  {
+			    printf("0x%04lX ", as_ret.opcode[as_ret.num-1]);
+			  }
 			size_counter+=as_ret.size[as_ret.num-1]; /*16 should not be hardcoded here*/
 			size_ctr2++;
 
@@ -828,11 +834,16 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			      }
 			    if(line_switch)
 			      {
-				printf("\n0x%04lX: ", size_counter / 16);
+				if(options.d==DATA_ON)
+				  {
+				    printf("\n0x%04lX: ", size_counter / 16);
+				  }
 				line_switch=0;
 			      }
-
-			    printf("0x%04lX ", as_ret.opcode[i]);
+			    if(options.d==DATA_ON)
+			      {
+				printf("0x%04lX ", as_ret.opcode[i]);
+			      }
 			    size_counter+=as_ret.size[i]; /*16 should not be hardcoded here*/
 			    size_ctr2++;
 			  }
