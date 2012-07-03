@@ -32,7 +32,7 @@ SHL X, 4, ..OK, 0x9037(16) current size: 400
 SET PC, POP, ..OK, 0x61C1(16) current size: 416
 found tag: crash
 SET PC, L[crash], L[n] crash, ..OK, 0x1A(16) 0x7DC1(16) current size: 448
-Compiled OK.
+Assembled OK.
 
 
 
@@ -58,7 +58,7 @@ SHL X, 4, ..OK, 0x9037(16) current size: 336
 SET PC, POP, ..OK, 0x61C1(16) current size: 352
 found tag: crash
 SET PC, crash, ..OK, 0xD9C1(16) current size: 368
-Compiled OK.
+Assembled OK.
 
 
 --- Manually testing if SET PC, crash was assembled OK ---
