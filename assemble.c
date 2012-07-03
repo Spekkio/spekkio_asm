@@ -117,6 +117,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 
   if(cont)
     {
+      /*
       switch(found_instr->is)
 	{
 	case ISINSTRUCTION:
@@ -127,6 +128,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	  break;
 	default: break;
 	}
+      */
      
 
       /*loop through the arguments*/
@@ -139,7 +141,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	  /*Returns the type and puts a index pointer in match_found*/
 	  is=detectType(&match_found, found_instr->arg[i], arg_list, symb_list, hsymb_table);
 
-	  printf("%s, ",found_instr->arg[i].arg);
+	  /*printf("%s, ",found_instr->arg[i].arg);*/ /*used in VERBOSE DEBUG*/
 	  found_instr->arg[i].is=UNDEFINED;
 	  p_buf = 0;
 	  switch(is)
@@ -209,7 +211,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 			  opret = encode_op(arg_list->arg[sc].arg_subargs, arg_list->arg[sc].arg_desc, 0, found_instr->arg[i].value);
 			  if(!opret.error)
 			    {
-			      printf("Too big");
+			    printf("Too big");
 			    }
 			 */
 			  rec_instr.arg[sc].arg_len = strlen(result);

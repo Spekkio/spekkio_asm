@@ -16,6 +16,7 @@ int main(int argc, char **argv)
   int parseFile_ret;
   int try_count;
   unsigned int i;
+  int a,retval;
   signed try_again;
   symbol * symbols;
   symbol * hardsymbols;
@@ -29,6 +30,7 @@ int main(int argc, char **argv)
   symbols = 0;
   sym_table.n_symbols=0;
   hsym_table.n_symbols=0;
+  retval=0;
 
   if(!setup_global_regex())
     {
@@ -49,13 +51,21 @@ int main(int argc, char **argv)
       memset(hardsymbols, '\0', sizeof(symbol)*MAX_SYMBOLS);
       hsym_table.table_limit = MAX_SYMBOLS;
     }
-
+  /*
   printf("instruction set: %lu kB\n",sizeof(cpu_instr_set)/1024);
   printf("argument list: %lu kB\n",sizeof(argument_list)/1024);
+  */
+  for(a=0;a<argc;a++)
+    {
+      if(strncmp(argv[a],"-set", 4)==0)
+	{
+	  a++;
+	  loadCPUFile(argv[a],&set,&arg_list, &sym_table, &hsym_table);
+	  printf("Using set: %s\n",argv[a]);
+	}
+    }
 
-  loadCPUFile("instr_sets/DCPU-16.set",&set,&arg_list, &sym_table, &hsym_table);
-
-  printf("Creating POSIX regular expressions...");
+  /*printf("Creating POSIX regular expressions...");*/
   if(make_all_arg_regex(&arg_list))
     {
       fprintf(stderr,"Could not create POSIX regular expressions.\n");
@@ -67,7 +77,7 @@ int main(int argc, char **argv)
       return 1;
     } else
     {
-      printf("OK\n");
+      /*printf("OK\n");*/
     }
 
   /*get_const_mask_bits("0101asdkjas010", &u);*/
@@ -80,10 +90,10 @@ int main(int argc, char **argv)
   printf("Argument 2 of %s is %s\n","[0x80+A]",result);
   */
 
-  if(argc==2)
+  if(1)
     {
-      printf("Assembling %s..\n",argv[1]);
-      f=fopen(argv[1],"r");
+      printf("Assembling %s..\n",argv[a-1]);
+      f=fopen(argv[a-1],"r");
     }
   try_again=1;
   try_count=0;
@@ -98,7 +108,7 @@ int main(int argc, char **argv)
 	    {
 
 	    case 1:
-	      printf("------- Has undefined lines, try again...\n");
+	      printf("\n------- Has undefined lines, try again...\n");
 	      try_again=1;
 	      try_count++;
 	      break;
@@ -114,10 +124,9 @@ int main(int argc, char **argv)
 		}
 	      if(!try_again)
 		{
-		  printf("Assembled OK.\n");
 		} else
 		{
-		  printf("------- Has updated lines, try again...\n");
+		  printf("\n------- Has updated lines, try again...\n");
 		}
 	      break;
 
@@ -129,13 +138,28 @@ int main(int argc, char **argv)
 	    }
 	}
 
+      if(try_again)
+	{
+	  printf("Failed assembly.\n");
+	  retval=1;
+	}
+      else if(try_again==0)
+	{
+	  printf("Assembled OK.\n");
+	  retval=0;
+	}
+
       fclose(f);
-    } else printf("Specify a file.\n");
+    } else 
+    {
+      fprintf(stderr,"File not found.\n");
+      retval=1;
+    }
 
   free_all_regex(&arg_list);
   free_global_regex();
   free(symbols);
   free(hardsymbols);
   
-  return 0;
+  return retval;
 }

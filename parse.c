@@ -191,22 +191,22 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 		    {
 		      if(!strncmp(lineBuffer,"-INSTRUCTIONS",13))
 			{
-			  printf("Parsing instructions..\n");
+			  /*printf("Parsing instructions..\n");*/
 			  type=INSTR;
 			}
 		      if(!strncmp(lineBuffer,"-ARGUMENTS",10))
 			{
-			  printf("Parsing arguments..\n");
+			  /*printf("Parsing arguments..\n");*/
 			  type=ARGU;
 			}
 		      if(!strncmp(lineBuffer,"-SYMBOLS",8))
 			{
-			  printf("Parsing symbols..\n");
+			  /*printf("Parsing symbols..\n");*/
 			  type=SYMB;
 			}
 		      if(!strncmp(lineBuffer,"-HARDSYMBOLS",8))
 			{
-			  printf("Parsing hard symbols..\n");
+			  /*printf("Parsing hard symbols..\n");*/
 			  type=HSYMB;
 			}
 
@@ -248,7 +248,7 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 	    }
 	}
       fclose(f);
-    }
+    } else fprintf(stderr, "Failed to load a CPU set file\n");
 
 }
 
@@ -309,7 +309,7 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 	      temp[a]=line[i];
 	    }
 	  temp[a]='\0';
-	  printf("found tag: %s\n",remWhite(temp,strlen(temp)));
+	  /*printf("found tag: %s\n",remWhite(temp,strlen(temp)));*/
 	  /*addSymbol tag*/
 	  strncpy(new_symbol.string, remWhite(temp,strlen(temp)), MAX_SYM_NAME_LEN);
 	  new_symbol.value = size_counter / 16; /*each pointer is 16 bit, this whould not be hardcoded*/
@@ -478,7 +478,7 @@ int parseARGLine(const char * line, argument * ret)
 		    switch(i)
 		      {
 		      case 0:
-			printf("Arg: %s\n",tempstr);
+			/*printf("Arg: %s\n",tempstr);*/
 			break;
 
 		      case 1: /*Value of the symbol, currently it can hade binary encoding*/
@@ -723,6 +723,7 @@ int parseCPULine(const char * line, cpu_instr * ret)
 
 int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_list, symbol_table * symb_list, const symbol_table * hsymb_table)
 {
+  static unsigned long int size_ctr2;
   char c;
   char lineBuffer[MAX_CNT_OF_LINE];
   unsigned int line_counter, i;
@@ -730,10 +731,12 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
   instruction found_instr;
   PARSE_LINE_RET ret;
   assemble_ret as_ret;
-  signed has_undef;
+  signed has_undef, line_switch;
 
   hsymb_table=hsymb_table;
   has_undef=0;
+  line_switch=1;
+  size_ctr2=0;
 
   c=' ';
   line_counter=0;
@@ -798,17 +801,46 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 		      as_ret = assemble(&found_instr, set, arg_list, symb_list, hsymb_table);
 		      if(as_ret.is==DEFINED)
 		      {
-			printf("..OK, ");
-			for(i=0;i<as_ret.num;i++)
+			/*printf("..OK, ");*/
+
+			if((size_ctr2) >= (8))
 			  {
-			    printf("0x%lX(%u) ", as_ret.opcode[i], as_ret.size[i]);
-			    size_counter+=as_ret.size[i]; /*16 should not be hardcoded here*/
+			    size_ctr2=0;
+			    line_switch=1;
 			  }
-			printf("current size: %lu\n",size_counter);
+			if(line_switch)
+			  {
+			    printf("\n0x%04lX: ", size_counter / 16);
+			    line_switch=0;
+			  }
+
+			printf("0x%04lX ", as_ret.opcode[as_ret.num-1]);
+			size_counter+=as_ret.size[as_ret.num-1]; /*16 should not be hardcoded here*/
+			size_ctr2++;
+
+			for(i=0;i<(as_ret.num-1);i++)
+			  {
+
+			    if((size_ctr2) >= (8))
+			      {
+				size_ctr2=0;
+				line_switch=1;
+			      }
+			    if(line_switch)
+			      {
+				printf("\n0x%04lX: ", size_counter / 16);
+				line_switch=0;
+			      }
+
+			    printf("0x%04lX ", as_ret.opcode[i]);
+			    size_counter+=as_ret.size[i]; /*16 should not be hardcoded here*/
+			    size_ctr2++;
+			  }
+			/*printf("current size: %lu\n",size_counter);*/
 		      } else
 			{
 			  has_undef=1;
-			  printf("UNDEFINED\n");
+			  /*printf("UNDEFINED\n");*/
 			}
 
 		      break;
