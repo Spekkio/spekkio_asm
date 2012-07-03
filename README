@@ -59,3 +59,12 @@ SET PC, POP, ..OK, 0x61C1(16) current size: 352
 found tag: crash
 SET PC, crash, ..OK, 0xD9C1(16) current size: 368
 Compiled OK.
+
+
+--- Manually testing if SET PC, crash was assembled OK ---
+Assembled: 0xD9C1 -> 1101100111000001 ; Reference
+SET Instruction   -> bbbbbbaaaaaa0001
+PC Hardsymbol     ->       011100
+Short liteal form -> 1vvvvv
+Crash value:352/16->  10110
+Result            -> 1101100111000001
