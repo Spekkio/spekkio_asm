@@ -42,8 +42,8 @@ R[a]       :a  :001aaa::::All:                 ; Force this, since first one als
 [n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All: ; [next word + register]
 [n]        :n  :011110:nnnnnnnnnnnnnnnn:::All: ; [next word]
 P[n]       :n  :011110:nnnnnnnnnnnnnnnn:::All: ; Force [next word]
-L(n)       :n  :011111:nnnnnnnnnnnnnnnn:::All: ; Force next word
-S(v)       :v  :1vvvvv::+1:::All:              ; Force literal value
+L[n]       :n  :011111:nnnnnnnnnnnnnnnn:::All: ; Force next word
+S[v]       :v  :1vvvvv::+1:::All:              ; Force literal value
 n          :n  :011111:nnnnnnnnnnnnnnnn:::All: ; next word
 v          :v  :1vvvvv::+1:::All:              ; Literal value
 
