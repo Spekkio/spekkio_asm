@@ -52,7 +52,7 @@ This 7 parts separated with colons. First a simple regular expression for the ar
 
 So now, we can write code like this
 
-   SET 0x00, [X]
+     SET 0x00, [X]
 
 This will match for the first subargument. This will chose the value '001aaa' for the second argument
 
