@@ -50,22 +50,26 @@ But we want to be able to use pointers, and raw literals for the DCPU-16 set are
 This 7 parts separated with colons. First a simple regular expression for the argument ([a]), then a list of subarguments (a), then the value that is used for that argument in base 2/binary (001aaa). Then comes an overflow value, this value will be added after the opcode, not parsed into it. We have some extra colons here, this is not used for anything yet. Then we have en extra regular expression for each subargument ([ABCXYZIJ]), and the value 'All' says that the subargument can be used for all instructions, otherwise we specify a list of instructions here.
 
 So now, we can write code like this
-   SET 0x00, [X]       ; This will match for the first subargument.
-       	     	       ; this will chose the value '001aaa' for the second argument
 
-   SET 0x00, [0x00]    ; This will NOT work, because of the extra regular expression.
-       	     	       ; In the first subargument, it only allows A,B,C,X,Y,Z,I,J to be
-		       ; Specified inside the brackets. 
+   SET 0x00, [X]
 
-   SET 0x00, 10        ; This will match for the last subargument
-                       ; '1vvvvv' only allows values between 0 - 2^5.
+This will match for the first subargument. This will chose the value '001aaa' for the second argument
 
-   SET 0x00, 0x1000    ; This will match for the argument that makes the value
-                       ; '011111'. It will add 0x1000 to an extra 16 bits after
-		       ; the instruction.
+   SET 0x00, [0x00]
 
-   SET [0x1000+X], 0x0 ; This will match for the [n+a] argument.
-       		       ; 
+This will NOT work, because of the extra regular expression. In the first subargument, it only allows A,B,C,X,Y,Z,I,J to be specified inside the brackets. 
+
+   SET 0x00, 10
+
+This will match for the last subargument '1vvvvv' only allows values between 0 - 2^5.
+
+   SET 0x00, 0x1000
+
+This will match for the argument that makes the value '011111'. It will add 0x1000 to an extra 16 bits after the instruction.
+
+   SET [0x1000+X], 0x0
+
+This will match for the [n+a] argument.
 
 If no extra regular expression is defined, [a-zA-Z0-9]{1,100} is used. But we still miss something. X doesn't have a value. The assembler still needs to know what X is, otherwise we will have lines in our code marked as UNDEFINED, and the assembling will not complete.
 
