@@ -40,6 +40,7 @@ with this information we can not write code like this
      ADD 0x00, 0x05
 
 But we want to be able to use pointers, and raw literals for the DCPU-16 set are coded in a certain way. So we have this part of the set file to describe subarguments.
+
     -ARGUMENTS
     [a]  :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
     [n+a]:n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All:
