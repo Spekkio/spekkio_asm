@@ -56,19 +56,19 @@ So now, we can write code like this
 
 This will match for the first subargument. This will chose the value '001aaa' for the second argument
 
-   SET 0x00, [0x00]
+     SET 0x00, [0x00]
 
-This will NOT work, because of the extra regular expression. In the first subargument, it only allows A,B,C,X,Y,Z,I,J to be specified inside the brackets. 
+This will NOT work, because of the extra regular expression. In the first subargument, it only allows A,B,C,X,Y,Z,I,J to be specified inside the brackets.
 
-   SET 0x00, 10
+     SET 0x00, 10
 
 This will match for the last subargument '1vvvvv' only allows values between 0 - 2^5.
 
-   SET 0x00, 0x1000
+     SET 0x00, 0x1000
 
 This will match for the argument that makes the value '011111'. It will add 0x1000 to an extra 16 bits after the instruction.
 
-   SET [0x1000+X], 0x0
+     SET [0x1000+X], 0x0
 
 This will match for the [n+a] argument.
 
