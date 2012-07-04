@@ -76,15 +76,15 @@ If no extra regular expression is defined, [a-zA-Z0-9]{1,100} is used. But we st
 
 Under Hardsymbols we specify the value that X has. As you can see we have 'All' here also, because in the future we might want to lock a certain symbol to a specific instruction or argument. The same symbol might have a different value for a different instruction or argument.
 
-   -HARDSYMBOLS
-   A          :000000:All:
-   B          :000001:All:
-   C          :000010:All:
-   X          :000011:All:
-   Y          :000100:All:
-   Z          :000101:All:
-   I          :000110:All:
-   J          :000111:All:
+      -HARDSYMBOLS
+      A          :000000:All:
+      B          :000001:All:
+      C          :000010:All:
+      X          :000011:All:
+      Y          :000100:All:
+      Z          :000101:All:
+      I          :000110:All:
+      J          :000111:All:
    
 Next we also have a list of normal Symbols, under the -SYMBOLS tag. These symbols are equal to normal numbers, they can be specified with #define in the code. Or in the set file under -SYMBOLS with the same syntax as hardsymbols. The difference between symbols and hardsymbols is that a hardsymbol will not be encoded with a argument rule, it will be put straight into the opcode. Example
 
