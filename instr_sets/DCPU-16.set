@@ -37,15 +37,15 @@ IFB:a,b:bbbbbbaaaaaa1111:   ; - performs next instruction only if (a&b)!=0
 
 ;Argument name:SUBARG1,SUBARG2,...:BIT Pattern:Next Word:Extra Regex:Used for what instr:
 -ARGUMENTS
-[a]        :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
-R[a]       :a  :001aaa::::All:                 ; Force this, since first one also matches further down.
-[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All: ; [next word + register]
-[n]        :n  :011110:nnnnnnnnnnnnnnnn:::All: ; [next word]
-P[n]       :n  :011110:nnnnnnnnnnnnnnnn:::All: ; Force [next word]
-L[n]       :n  :011111:nnnnnnnnnnnnnnnn:::All: ; Force next word
-S[v]       :v  :1vvvvv::+1:::All:              ; Force literal value
-n          :n  :011111:nnnnnnnnnnnnnnnn:::All: ; next word
-v          :v  :1vvvvv::+1:::All:              ; Literal value
+[a]        :a  :001aaa:                :  :[ABCXYZIJ]\{1\}:All:
+R[a]       :a  :001aaa:                :  :                                    :All: ; Force this, since first one also matches further down.
+[n+a]      :n,a:010aaa:nnnnnnnnnnnnnnnn:  :[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All: ; [next word + register]
+[n]        :n  :011110:nnnnnnnnnnnnnnnn:  :                                    :All: ; [next word]
+P[n]       :n  :011110:nnnnnnnnnnnnnnnn:  :                                    :All: ; Force [next word]
+L[n]       :n  :011111:nnnnnnnnnnnnnnnn:  :                                    :All: ; Force next word
+S[v]       :v  :1vvvvv:                :+1:                                    :All: ; Force literal value
+n          :n  :011111:nnnnnnnnnnnnnnnn:  :                                    :All: ; next word
+v          :v  :1vvvvv:                :+1:                                    :All: ; Literal value
 
 ; Hardsymbols will not be encoded, they will be put straight into the opcode
 -HARDSYMBOLS
