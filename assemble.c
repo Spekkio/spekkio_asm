@@ -2,6 +2,7 @@
 #include <string.h>
 #include <regex.h>
 #include <inttypes.h>
+#include "main.h"
 #include "parse.h"
 #include "encode.h"
 #include "smallfunc.h"
@@ -117,18 +118,21 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 
   if(cont)
     {
-      /*
-      switch(found_instr->is)
+
+      if(verbose==1)
 	{
-	case ISINSTRUCTION:
-	  printf("%s ",set->instr[found_instr->instr_index].instr_name);
-	  break;
-	case ISARGUMENT:
-	  printf("%s ",arg_list->arg[found_instr->instr_index].arg_regex);
-	  break;
-	default: break;
+	  switch(found_instr->is)
+	    {
+	    case ISINSTRUCTION:
+	      printf("%s ",set->instr[found_instr->instr_index].instr_name);
+	      break;
+	    case ISARGUMENT:
+	      printf("%s ",arg_list->arg[found_instr->instr_index].arg_regex);
+	      break;
+	    default: break;
+	    }
 	}
-      */
+
      
 
       /*loop through the arguments*/
@@ -141,13 +145,15 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	  /*Returns the type and puts a index pointer in match_found*/
 	  is=detectType(&match_found, found_instr->arg[i], arg_list, symb_list, hsymb_table);
 
-	  /*printf("%s, ",found_instr->arg[i].arg);*/ /*used in VERBOSE DEBUG*/
+	  if(verbose==1)
+	    printf("%s, ",found_instr->arg[i].arg); /*used in VERBOSE DEBUG*/;
 	  found_instr->arg[i].is=UNDEFINED;
 	  p_buf = 0;
 	  switch(is)
 	    {
 	    case ISHEX:
-	      /*printf("=HEX");*/
+	      if(verbose==1)
+		printf("=HEX");
 
 	      if(sscanf(found_instr->arg[i].arg,"0x%lX",&p_buf)==1)
 		{
@@ -162,7 +168,8 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    case ISNUMBER:
-	      /*printf("=NUMBER");*/
+	      if(verbose==1)
+		printf("=NUMBER");
 
 	      if(sscanf(found_instr->arg[i].arg,"%lu",&p_buf)==1)
 		{
@@ -173,7 +180,9 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    case ISSYMBOL:
-	      /*printf("=SYMBOL");*/
+	      if(verbose==1)
+		printf("=SYMBOL");
+
 	      if(symb_list->table[match_found].is==DEFINED)
 		{
 		  found_instr->arg[i].value = symb_list->table[match_found].value;
@@ -187,7 +196,9 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    case ISHSYMBOL:
-	      /*printf("=HARDSYMBOL");*/
+	      if(verbose==1)
+		printf("=HARDSYMBOL");
+
 	      if(hsymb_table->table[match_found].is==DEFINED)
 		{
 		  found_instr->arg[i].value = hsymb_table->table[match_found].value;
@@ -199,7 +210,8 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      if(found_instr->is==ISINSTRUCTION)
 		{
 		  /*Denna kod skall vara i detectType(), mojligtvis dela upp detectType, detectSymbol.*/
-		  /*printf("=MATCHED_ARG->");*/
+		  if(verbose==1)
+		    printf("=MATCHED_ARG->");
 		  rec_instr.instr_index=match_found;
 		  rec_instr.n_args=arg_list->arg[match_found].n_args; /*match_found may be uninit...*/
 		  rec_instr.is=ISARGUMENT;
@@ -241,7 +253,8 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	      break;
 
 	    default:
-	      /*printf("=UNDEFSYMBOL");*/
+	      if(verbose==1)
+		printf("=UNDEFSYMBOL");
 	      break;
 	    }
 
@@ -318,7 +331,8 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 
 	  if(found_instr->arg[i].is==DEFINED)
 	    {
-	      /*printf("(0x%lX), ", found_instr->arg[i].value);*/
+	      if(verbose==1)
+		printf("(0x%lX), ", found_instr->arg[i].value);
 	      if(found_instr->is==ISARGUMENT)
 		{ 
 		  if(arg_list->arg[found_instr->instr_index].arg_overflow_len>0)
@@ -334,7 +348,8 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 		}
 	    }else
 	    {
-	      /*printf(", ");*/
+	      if(verbose==1)
+		printf(", ");
 	    }
 
 	}/*Loop through arguments hex.*/

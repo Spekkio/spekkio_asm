@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <regex.h>
 #include <string.h>
 #include <ctype.h>
@@ -236,4 +237,33 @@ void splitString(char * store, const char * str, const unsigned int len, const c
       i++;
       store[a++]='\0';
     }
+}
+
+unsigned int breakString(char * store, const char * str, const size_t strl)
+{
+  unsigned int i,a;
+  char temp[MAX_CNT_OF_LINE];
+  signed found_other;
+  a=0;
+  found_other=0;
+  if(strl>10000)
+    {
+      return 0;
+    }
+      for(i=0;i<strl;i++)
+	{
+	  if((!isblank(str[i])))
+	    {
+	      found_other=1;
+	      temp[a] = str[i];
+	      a++;
+	    }
+	  else if((found_other==1) && isblank(str[i]))
+	    {
+	      i=strl;
+	    }
+	}
+  temp[a]='\0';
+  strncpy(store,temp,a);
+  return a;
 }

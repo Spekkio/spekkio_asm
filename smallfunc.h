@@ -11,3 +11,4 @@ uint64_t bitSize(uint64_t a);
 uint64_t nWords(const uint64_t bitsize, const uint64_t wordsize);
 char * remWhite(char * s, const unsigned int len);
 void splitString(char * store, const char * str, const unsigned int len, const char split, const unsigned int nth);
+unsigned int breakString(char * store, const char * str, const size_t strl);

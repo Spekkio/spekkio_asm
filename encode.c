@@ -91,16 +91,18 @@ void match_maskstring_to_args(const char * op_args, const char * op_desc)
 	      op_list[a].mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	      op_list[a].arg_len++;
 	      op_list[a].arg_shift=strlen_op_desc-c;
-	    } else
-	    if((op_desc[i]=='1') || (op_desc[i]=='0'))
-	      {
-		if(op_desc[i]=='1')
-		  {
-		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-		  }
-		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-	      }
+	    }
 	}
+
+      if((op_desc[i]=='1') || (op_desc[i]=='0'))
+	{
+	  if(op_desc[i]=='1')
+	    {
+	      const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
+	    }
+	  const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
+	}
+
     }
 
   /*assign values, and mask out overflow bits*/
@@ -190,15 +192,15 @@ encode_op_ret encode_op(const char * op_args, const char * op_desc, const int n_
 	      /*
 	      for(c=a;c>0;c--) op_list[a].arg_shift-=op_list[c].arg_len;
 	      */
-	    } else
-	    if((op_desc[i]=='1') || (op_desc[i]=='0'))
-	      {
-		if(op_desc[i]=='1')
-		  {
-		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-		  }
-		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-	      }
+	    }
+	}
+      if((op_desc[i]=='1') || (op_desc[i]=='0'))
+	{
+	  if(op_desc[i]=='1')
+	    {
+	      const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
+	    }
+	  const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	}
     }
 
@@ -310,7 +312,6 @@ unsigned int encode_opcode_n(const instruction * found_instr, const char * op_ar
       c++;
       for(a=0;a<arg_c;a++)
 	{
-
 	  if(op_list[a].arg_t == op_desc[i])
 	    {
 	      /*printf("%c %u\n",op_desc[i],op_list[a].arg_shift);*/
@@ -319,15 +320,15 @@ unsigned int encode_opcode_n(const instruction * found_instr, const char * op_ar
 	      /*
 	      for(c=a;c>0;c--) op_list[a].arg_shift-=op_list[c].arg_len;
 	      */
-	    } else
-	    if((op_desc[i]=='1') || (op_desc[i]=='0'))
-	      {
-		if(op_desc[i]=='1')
-		  {
-		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-		  }
-		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-	      }
+	    }
+	}
+      if((op_desc[i]=='1') || (op_desc[i]=='0'))
+	{
+	  if(op_desc[i]=='1')
+	    {
+	      const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
+	    }
+	  const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	}
     }
 
@@ -436,15 +437,15 @@ unsigned int encode_opcode(const char * op_args, const char * op_desc, const int
 	      /*
 	      for(c=a;c>0;c--) op_list[a].arg_shift-=op_list[c].arg_len;
 	      */
-	    } else
-	    if((op_desc[i]=='1') || (op_desc[i]=='0'))
-	      {
-		if(op_desc[i]=='1')
-		  {
-		    const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-		  }
-		const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
-	      }
+	    }
+	}
+      if((op_desc[i]=='1') || (op_desc[i]=='0'))
+	{
+	  if(op_desc[i]=='1')
+	    {
+	      const_ |= ((uint64_t)1)<<(strlen_op_desc-i-1);
+	    }
+	  const_mask |= ((uint64_t)1)<<(strlen_op_desc-i-1);
 	}
     }
 

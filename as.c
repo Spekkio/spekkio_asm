@@ -4,6 +4,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <regex.h>
+#include "main.h"
 #include "parse.h"
 #include "encode.h"
 #include "setup_regex.h"
@@ -112,7 +113,7 @@ int main(int argc, char **argv)
 	    {
 
 	    case 1:
-	      /*printf("\n------- Has undefined lines, try again...\n");*/
+	      printf("\n------- Has undefined lines, try again...\n");
 	      try_again=1;
 	      try_count++;
 	      break;
@@ -130,11 +131,12 @@ int main(int argc, char **argv)
 		{
 		} else
 		{
-		  /*printf("\n------- Has updated lines, try again...\n");*/
+		  printf("\n------- Has updated lines, try again...\n");
 		}
 	      break;
 
 	    case -1:
+	      printf("Assembly failed\n");
 	      try_again=0;
 	      failed=1;
 	      break;
@@ -153,8 +155,8 @@ int main(int argc, char **argv)
 	  /*printf("\nAssembled OK.\n");*/
 	  /*Assemble one last time with output enabled*/
 	  options.d=DATA_ON;
-	  rewind(f);
 	  size_counter=0;
+	  rewind(f);
 	  parseFile_ret = parseFile(f,&set, &arg_list, &sym_table, &hsym_table, options);
 	  printf("\n");
 	  retval=0;

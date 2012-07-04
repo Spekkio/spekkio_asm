@@ -104,7 +104,7 @@ typedef struct
 
 typedef struct
 {
-  int instr_name_len;
+  unsigned int instr_name_len;
   char instr_name[MAX_NAME_LEN];
   unsigned int n_args;
   char args[MAX_ARG_LEN];
@@ -183,3 +183,5 @@ int match_argument(char * result, const int max_result_len, const char * match, 
 
 int parseAssignSymbolValue(const char * tempstr, const unsigned int strl,  symbol * symb);
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl);
+void clearInstruction(instruction * f);
+

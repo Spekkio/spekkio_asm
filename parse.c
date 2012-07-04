@@ -5,6 +5,7 @@
 #include <regex.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include "main.h"
 #include "parse.h"
 #include "encode.h"
 #include "setup_regex.h"
@@ -32,6 +33,24 @@ int match_symbol(unsigned int * ret, const char * match, const symbol_table * sy
     }
 
   return 1;
+}
+
+void clearInstruction(instruction * f)
+{
+  unsigned int i,a;
+  f->instr_index=0;
+  f->n_args=0;
+  f->is=ISINSTRUCTION;
+  for(i=0;i<MAX_ARGS;i++)
+    {
+      f->arg[i].arg_len=0;
+      f->arg[i].value=0;
+      f->arg[i].is=UNDEFINED;
+      for(i=0;i<MAX_ARGS;i++)
+	{
+	  f->arg[i].arg[a]=0;
+	}
+    }
 }
 
 /*returns 0 if success, -1 if memory error or other error, 1 if no match*/
@@ -271,6 +290,10 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
   char temp[MAX_ARG_PARSED_LEN+MAX_NAME_LEN]; /*stores names, args, and macros*/
   signed found_instr;
   char case_line[MAX_CNT_OF_LINE];
+  /*
+  char temp_line[MAX_CNT_OF_LINE];
+  */
+  /*char instr_line[MAX_CNT_OF_LINE];*/
   signed whitespace_clear_flag, whitespace_clear_flag_delay;
   symbol new_symbol;
   long int f_symb;
@@ -280,6 +303,11 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
     {
       case_line[i] = toupper(line[i]);
     }
+  case_line[i]='\0';
+  /*
+  remWhite(case_line, strlen(case_line));
+  splitString(instr_line, case_line, strlen(case_line), ' ', 0);
+  */
 
   temp[0]=temp[0];
 
@@ -375,24 +403,46 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 
       if(found_instr==0)
 	{
-	  for(c=0;c<set->num;c++)
+	  for(c=0;(c<set->num) && (found_instr==0);c++)
 	    {
 	      if(whitespace_clear_flag_delay==0)
-		if(!strncmp(&case_line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
-		  {
-		    /*printf("found instr: %s ",set->instr[c].instr_name);*/
-		    found_instr=1;
-		    the_instr=c;
-		    i+=set->instr[c].instr_name_len;
+		{
+		  /*This needs some more work.*/
+		  /*Here we have some double matching, for example*/
+		  /*an instruction BRP might also match with an instruction BR*/
+		  
+		  /*
+		  strncpy(temp_line, &case_line[i], strlen(&case_line[i]));
+		  temp_line[set->instr[c].instr_name_len-1]=';';
+		  temp_line[set->instr[c].instr_name_len]='\0';
+		  printf("Match: %s(%u) -> %s(%lu)\n",set->instr[c].instr_name,set->instr[c].instr_name_len,temp_line, strlen(temp_line));
+		  */
 
-		    store->instr_index = c;
+		  /*temp_line_len=breakString(temp_line,&case_line[i], strlen(&case_line[i]));
+		    temp_line_len=temp_line_len;*/
+		  /*printf("Test: %s\n",temp_line);*/
+		  /*
+		  if(temp_line_len!=0)
+		  if(set->instr[c].instr_name_len == temp_line_len)*/
+		      if(!strncmp(&case_line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
+			{
+			  /*
+			  printf("found instr: %s in \"%s\" %u\n",set->instr[c].instr_name,&case_line[i],found_instr);
+			  */
 
-		    if(i>strlen(line) || line[i]=='\n' || line[i]=='\r')
-		      {
-			/*printf("%s",line);*/
-			/*return 1;*/
-		      }
-		  }
+			  found_instr=1;
+			  the_instr=c;
+			  i+=set->instr[c].instr_name_len;
+
+			  store->instr_index = c;
+
+			  if(i>strlen(line) || line[i]=='\n' || line[i]=='\r')
+			    {
+			      /*printf("%s",line);*/
+			      /*return 1;*/
+			    }
+			}
+		}
 	    }
 	}else /*Parse arguments*/
 	{
@@ -430,7 +480,7 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
     }
   else
     {
-      if(found_instr)
+      if(found_instr==1)
 	{
 	  if((cnt_args+1)==set->instr[the_instr].n_args)
 	    {
@@ -484,8 +534,6 @@ int parseARGLine(const char * line, argument * ret)
 		      case 1: /*Value of the symbol, currently it can hade binary encoding*/
 			strncpy(ret->arg_regex, tempstr, MAX_NAME_LEN);
 			ret->arg_regex_len = strl;
-
-
 			/*printf("Regex string: %s\n",ret->arg_regex);*/
 
 			break;
@@ -681,6 +729,9 @@ int parseCPULine(const char * line, cpu_instr * ret)
 	  a++;
 	}
     }
+  /*
+  ret->instr_name[a]=';';
+  */
   ret->instr_name[a]='\0';
   ret->instr_name_len=a;
   
@@ -787,6 +838,8 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 	      lineBuffer[line_counter]='\0';
 	      if(line_counter>1)
 		{
+		  clearInstruction(&found_instr);
+
 		  ret=parseLine(lineBuffer,set,&found_instr, symb_list);
 		  switch(ret)
 		    {
@@ -847,11 +900,13 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			    size_counter+=as_ret.size[i]; /*16 should not be hardcoded here*/
 			    size_ctr2++;
 			  }
-			/*printf("current size: %lu\n",size_counter);*/
+			if(verbose==1)
+			  printf("current size: %lu\n",size_counter);
 		      } else
 			{
 			  has_undef=1;
-			  /*printf("UNDEFINED\n");*/
+			  if(verbose==1)
+			    printf("UNDEFINED\n");
 			}
 
 		      break;
