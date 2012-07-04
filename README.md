@@ -13,8 +13,7 @@ Currently I have added the DCPU-16 instruction set from the game 0x10c.
 This is the output from the assembler as it looks now with DCPU specification loaded.
 
 
-*Debug/Work in progress/Output looks like this, this is assembled
-*using forced long pointers, to compare with the sample code from DCPU-16 1.1 spec.
+### Debug/Work in progress/Output looks like this, this is assembled using forced long pointers, to compare with the sample code from DCPU-16 1.1 spec.
 --------------------------------------------------------------------
 	SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) current size: 32
 	SET P[0x1000], P[n] 0x1000, 0x20, ..OK, 0x1000(16) 0x20(16) 0x7DE1(16) current size: 80
@@ -38,13 +37,13 @@ This is the output from the assembler as it looks now with DCPU specification lo
 	SET PC, L[crash], L[n] crash, ..OK, 0x1A(16) 0x7DC1(16) current size: 448
 	Assembled OK.
 
-*Data output
+#### Data output
       0x0000: 0x7C01 0x0030 0x7DE1 0x1000 0x0020 0x7803 0x1000 0xC00D 
       0x0008: 0x7DC1 0x001A 0xA861 0x7C01 0x2000 0x2161 0x2000 0x8463 
       0x0010: 0x806D 0x7DC1 0x000D 0x9031 0x7C10 0x0018 0x7DC1 0x001A 
       0x0018: 0x9037 0x61C1 0x7DC1 0x001A 
 
-*This is assembled using automatic choice of long/short pointers.
+### This is assembled using automatic choice of long/short pointers.
 -----------------------------------------------------------------------------------------
 	SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) current size: 32
 	SET [0x1000], [n] 0x1000, 0x20, ..OK, 0x1000(16) 0x20(16) 0x7DE1(16) current size: 80
@@ -68,11 +67,12 @@ This is the output from the assembler as it looks now with DCPU specification lo
 	SET PC, crash, ..OK, 0xD9C1(16) current size: 368
 	Assembled OK.
 
+#### Data output
 	0x0000: 0x7C01 0x0030 0x7DE1 0x1000 0x0020 0x7803 0x1000 0xC00D 
 	0x0008: 0xD9C1 0xA861 0x7C01 0x2000 0x2161 0x2000 0x8463 0x806D 
 	0x0010: 0xB1C1 0x9031 0xD010 0xD9C1 0x9037 0x61C1 0xD9C1 
 
-** Manually testing if SET PC, crash was assembled OK **
+#### Manually testing if SET PC, crash was assembled OK
     Assembled: 0xD9C1 -> 1101100111000001 ; Reference
     SET Instruction   -> bbbbbbaaaaaa0001
     PC Hardsymbol     ->       011100
@@ -81,7 +81,7 @@ This is the output from the assembler as it looks now with DCPU specification lo
     Result            -> 1101100111000001
 
 
-*And with 1.7 Spec
+### And with 1.7 Spec
 -----------------------------------------------------------------------------------------
 	0x0000: 0x7C01 0x0030 0x7FC1 0x1000 0x0020 0x7803 0x1000 0xC013 
 	0x0008: 0xDB81 0xA8C1 0x7C01 0x2000 0x22C1 0x2000 0x84C3 0x80D3 
