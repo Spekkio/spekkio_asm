@@ -12,11 +12,11 @@ Currently I have added the DCPU-16 instruction set from the game 0x10c.
 ---------------------------------------------------
 To assemble using the 1.1 specification
 
- ./as -set instr_sets/DCPU-16.set asmfile.asm
+   ./as -set instr_sets/DCPU-16.set asmfile.asm
 
 To assemble using the 1.7 specification
 
- ./as -set instr_sets/DCPU-16_1-7.set asmfile.asm
+   ./as -set instr_sets/DCPU-16_1-7.set asmfile.asm
 
 
 # Howto make a set file
