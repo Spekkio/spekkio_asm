@@ -41,11 +41,11 @@ with this information we can not write code like this
 
 But we want to be able to use pointers, and raw literals for the DCPU-16 set are coded in a certain way. So we have this part of the set file to describe subarguments.
  -ARGUMENTS
- [a]  :a  :001aaa:                ::[ABCXYZIJ]\{1\}                     :All:
+ [a]  :a  :001aaa:::[ABCXYZIJ]\{1\}:All:
  [n+a]:n,a:010aaa:nnnnnnnnnnnnnnnn::[a-zA-Z0-9]\{1,100\},[ABCXYZIJ]\{1\}:All:
- [n]  :n  :011110:nnnnnnnnnnnnnnnn::                                    :All:
- n    :n  :011111:nnnnnnnnnnnnnnnn::                                    :All:
- v    :v  :1vvvvv:                ::                                    :All:
+ [n]  :n  :011110:nnnnnnnnnnnnnnnn:::All:
+ n    :n  :011111:nnnnnnnnnnnnnnnn:::All:
+ v    :v  :1vvvvv::::All:
 
 This 7 parts separated with colons. First a simple regular expression for the argument ([a]), then a list of subarguments (a), then the value that is used for that argument in base 2/binary (001aaa). Then comes an overflow value, this value will be added after the opcode, not parsed into it. We have some extra colons here, this is not used for anything yet. Then we have en extra regular expression for each subargument ([ABCXYZIJ]), and the value 'All' says that the subargument can be used for all instructions, otherwise we specify a list of instructions here.
 
