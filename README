@@ -39,7 +39,7 @@ Assembled OK.
 0x0010: 0x806D 0x7DC1 0x000D 0x9031 0x7C10 0x0018 0x7DC1 0x001A 
 0x0018: 0x9037 0x61C1 0x7DC1 0x001A 
 
-This is compiled using automatic choice of long/short pointers.
+This is assembled using automatic choice of long/short pointers.
 -----------------------------------------------------------------------------------------
 SET A, 0x30, ..OK, 0x30(16) 0x7C01(16) current size: 32
 SET [0x1000], [n] 0x1000, 0x20, ..OK, 0x1000(16) 0x20(16) 0x7DE1(16) current size: 80
