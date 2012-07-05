@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 	    {
 
 	    case 1:
-	      printf("\n------- Has undefined lines, try again...\n");
+	      /*printf("\n------- Has undefined lines, try again...\n");*/
 	      try_again=1;
 	      try_count++;
 	      break;
@@ -131,12 +131,12 @@ int main(int argc, char **argv)
 		{
 		} else
 		{
-		  printf("\n------- Has updated lines, try again...\n");
+		  /*printf("\n------- Has updated lines, try again...\n");*/
 		}
 	      break;
 
 	    case -1:
-	      printf("Assembly failed\n");
+	      /*printf("Assembly failed\n");*/
 	      try_again=0;
 	      failed=1;
 	      break;

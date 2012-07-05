@@ -83,6 +83,7 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 
   cont=0;
 
+  ret.error=0;
   ret.is=UNDEFINED;
   ret.num=0;
   for(i=0;i<MAX_OVERFLOWS;i++)
@@ -96,7 +97,6 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
   symb_list=symb_list;
   /*These two must be the same, I think they are checked before*/
   /*I'm starting to loose track...*/
-
       switch(found_instr->is)
 	{
 	case ISINSTRUCTION:
@@ -104,11 +104,18 @@ assemble_ret assemble(instruction * found_instr, const cpu_instr_set * set, cons
 	    {
 	      cont=1;
 	    }
+	  else
+	    {
+	      ret.error=1;
+	    }
 	  break;
 	case ISARGUMENT:
 	  if((found_instr->n_args == arg_list->arg[found_instr->instr_index].n_args))
 	    {
 	      cont=1;
+	    } else
+	    {
+	      ret.error=1;
 	    }
 	  break;
 	default:

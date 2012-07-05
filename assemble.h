@@ -1,5 +1,6 @@
 typedef struct
 {
+  signed error;
   unsigned int num;
   uint64_t opcode[MAX_OVERFLOWS];
   unsigned int size[MAX_OVERFLOWS]; /*Resulting size of the opcode in bits*/

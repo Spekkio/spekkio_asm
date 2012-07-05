@@ -286,7 +286,7 @@ void addArgument(const argument arg, argument_list * arg_list)
 PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instruction * store, symbol_table * sym_table/*, macro * store*/)
 {
   PARSE_LINE_RET return_value;
-  unsigned int i,c,a,cnt_args,the_instr;
+  unsigned int i,c,a,cnt_args,the_instr,char_cnt;
   char temp[MAX_ARG_PARSED_LEN+MAX_NAME_LEN]; /*stores names, args, and macros*/
   signed found_instr;
   char case_line[MAX_CNT_OF_LINE];
@@ -410,38 +410,32 @@ PARSE_LINE_RET parseLine(const char * line, const cpu_instr_set * set, instructi
 		  /*This needs some more work.*/
 		  /*Here we have some double matching, for example*/
 		  /*an instruction BRP might also match with an instruction BR*/
-		  
-		  /*
-		  strncpy(temp_line, &case_line[i], strlen(&case_line[i]));
-		  temp_line[set->instr[c].instr_name_len-1]=';';
-		  temp_line[set->instr[c].instr_name_len]='\0';
-		  printf("Match: %s(%u) -> %s(%lu)\n",set->instr[c].instr_name,set->instr[c].instr_name_len,temp_line, strlen(temp_line));
-		  */
 
-		  /*temp_line_len=breakString(temp_line,&case_line[i], strlen(&case_line[i]));
-		    temp_line_len=temp_line_len;*/
-		  /*printf("Test: %s\n",temp_line);*/
+		  
+		  for(char_cnt = 0; (char_cnt<MAX_CNT_OF_LINE) && !((case_line[i+char_cnt]==0 || isblank(case_line[i+char_cnt])) || (isspace(case_line[i+char_cnt]))) ; char_cnt++);
 		  /*
-		  if(temp_line_len!=0)
-		  if(set->instr[c].instr_name_len == temp_line_len)*/
-		      if(!strncmp(&case_line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
-			{
+		  printf("\"%s\" len = %u\n",&case_line[i],char_cnt);
+		  */
+		  
+		  if(set->instr[c].instr_name_len == char_cnt)
+		  if(!strncmp(&case_line[i],set->instr[c].instr_name,set->instr[c].instr_name_len))
+		    {
 			  /*
 			  printf("found instr: %s in \"%s\" %u\n",set->instr[c].instr_name,&case_line[i],found_instr);
 			  */
 
-			  found_instr=1;
-			  the_instr=c;
-			  i+=set->instr[c].instr_name_len;
+		      found_instr=1;
+		      the_instr=c;
+		      i+=set->instr[c].instr_name_len;
 
-			  store->instr_index = c;
+		      store->instr_index = c;
 
-			  if(i>strlen(line) || line[i]=='\n' || line[i]=='\r')
-			    {
-			      /*printf("%s",line);*/
-			      /*return 1;*/
-			    }
+		      if(i>strlen(line) || line[i]=='\n' || line[i]=='\r')
+			{
+			  /*printf("%s",line);*/
+			  /*return 1;*/
 			}
+		    }
 		}
 	    }
 	}else /*Parse arguments*/
@@ -838,6 +832,8 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 	      lineBuffer[line_counter]='\0';
 	      if(line_counter>1)
 		{
+		  /*Data from previous instruction is still here for*/
+		  /*instructions with zero arguments. This causes problems.*/
 		  clearInstruction(&found_instr);
 
 		  ret=parseLine(lineBuffer,set,&found_instr, symb_list);
@@ -852,7 +848,7 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 		       */
 	      	      found_instr.is=ISINSTRUCTION;
 		      as_ret = assemble(&found_instr, set, arg_list, symb_list, hsymb_table);
-		      if(as_ret.is==DEFINED)
+		      if((as_ret.is==DEFINED) && (as_ret.error==0))
 		      {
 			/*printf("..OK, ");*/
 
@@ -902,11 +898,16 @@ int parseFile(FILE * f, const cpu_instr_set * set, const argument_list * arg_lis
 			  }
 			if(verbose==1)
 			  printf("current size: %lu\n",size_counter);
-		      } else
+		      }
+		      else if((as_ret.is==UNDEFINED) && (as_ret.error==0))
 			{
 			  has_undef=1;
 			  if(verbose==1)
 			    printf("UNDEFINED\n");
+			}
+		      else if(as_ret.error!=0)
+			{
+			  fprintf(stderr,"assemble() returned error code: %u\n",as_ret.error);
 			}
 
 		      break;
