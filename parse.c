@@ -154,6 +154,7 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
   argument arg;
   cpu_instr instr;
   symbol symb;
+  option option;
 
   hsym_table = hsym_table;
   
@@ -208,6 +209,10 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 		  lineBuffer[line_counter]='\0';
 		  if(line_counter>1)
 		    {
+		      if(!strncmp(lineBuffer,"-OPTIONS",8))
+			{
+			  type=OPT;
+			}
 		      if(!strncmp(lineBuffer,"-INSTRUCTIONS",13))
 			{
 			  /*printf("Parsing instructions..\n");*/
@@ -231,6 +236,13 @@ void loadCPUFile(const char * filename, cpu_instr_set * set, argument_list * arg
 
 		      switch(type)
 			{
+			case OPT:
+			  if(parseOPTLine(lineBuffer,&option))
+			    {
+			      /*addInstruction(instr, set);*/
+			    }
+			  break;
+
 			case INSTR:
 			  if(parseCPULine(lineBuffer,&instr))
 			    {
@@ -701,6 +713,13 @@ int parseSYMBLine(const char * line, symbol * symb)
     }
 
   return success;
+}
+
+int parseOPTLine(const char * line, option * ret)
+{
+  ret=ret;
+  printf("Option line: %s",line);
+  return 0;
 }
 
 int parseCPULine(const char * line, cpu_instr * ret)

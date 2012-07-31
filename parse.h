@@ -53,6 +53,14 @@ typedef enum ARG_TYPE {ISHEX, ISNUMBER, ISSYMBOL, ISHSYMBOL, IS_MATCHED, ISUNDEF
 #define MAX_CNT_OF_LINE 1000
 #endif
 
+#ifndef MAX_OPT_NAME_LEN
+#define MAX_OPT_NAME_LEN 100
+#endif
+
+#ifndef MAX_OPT_VALUE_LEN
+#define MAX_OPT_VALUE_LEN 100
+#endif
+
 /*Return values for parseLine()*/
 typedef enum PARSE_LINE_RET
   {
@@ -164,6 +172,13 @@ typedef struct
   dataoutput d;
 }parseFile_opt;
 
+typedef struct
+{
+  char name[MAX_OPT_NAME_LEN];
+  char value[MAX_OPT_VALUE_LEN];
+  int64_t iparsed_value;
+}option;
+
 
 extern unsigned long int size_counter;
 
@@ -185,3 +200,4 @@ int parseAssignSymbolValue(const char * tempstr, const unsigned int strl,  symbo
 int match_symbol(unsigned int * ret, const char * match, const symbol_table * symb, const unsigned int strl);
 void clearInstruction(instruction * f);
 
+int parseOPTLine(const char * line, option * ret);
